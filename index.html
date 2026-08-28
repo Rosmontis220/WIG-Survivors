@@ -60,6 +60,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:
 .dexItem.locked{opacity:.45}
 .dexItem.locked .em{filter:grayscale(1) brightness(.4)}
 .dexItem.locked .nm{color:#544c70}
+#dexDetail .ddBox{background:#0e0a18;border:1px solid #4a3870;border-radius:10px;padding:20px 24px;width:min(420px,92vw);text-align:left}
+#dexDetail .ddHead{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+#dexDetail .ddEm{font-size:34px}
+#dexDetail .ddName{color:#e8e2ff;font-size:19px;font-weight:bold}
+#dexDetail .ddBio{color:#7a7296;font-size:12px;line-height:1.6;margin-bottom:14px}
+#dexDetail .ddSec{color:#b9a3ff;font-size:12px;margin:10px 0 4px}
+#dexDetail .ddBody{color:#9a92b8;font-size:13px;line-height:1.9;background:#120e1e;border:1px solid #2a2440;border-radius:6px;padding:10px 12px}
 #dex .back{margin-top:16px;padding:10px 34px;background:#2a2440;color:#e8e2ff;
   border:1px solid #4a3870;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
 button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-radius:6px;
@@ -139,6 +146,18 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
   <div class="sub" id="dexSub"></div>
   <div id="dexGrid"></div>
   <button class="back" id="btnDexBack">← 返回</button>
+</div>
+
+<div class="ov" id="dexDetail">
+  <div class="ddBox">
+    <div class="ddHead"><span class="ddEm" id="ddEm"></span><span class="ddName" id="ddName"></span></div>
+    <div class="ddBio" id="ddBio"></div>
+    <div class="ddSec">📊 属性</div>
+    <div class="ddBody" id="ddStats"></div>
+    <div class="ddSec">⚙️ 机制</div>
+    <div class="ddBody" id="ddMech"></div>
+    <button class="back" id="btnDdBack">← 返回图鉴</button>
+  </div>
 </div>
 
 <div class="ov" id="esc">
@@ -1047,6 +1066,53 @@ function buildCharSel(){
     list.appendChild(b);
   }
 }
+const BEHAVIOR_DESC={
+  chase:"追踪玩家",
+  dash:"间歇冲刺扑向玩家",
+  ambush:"装死埋伏，靠近后觉醒突袭",
+  shooter:"保持距离远程射击",
+  healer:"给附近的烂点回血",
+  greedy:"追着吃掉地上的线索回血"
+};
+function fmtParams(b,p){
+  if(!p)return "";
+  switch(b){
+    case "dash":return "　每 "+p.every+" 秒冲刺一次（速度 "+p.dashSpd+"，持续 "+p.dashTime+"s）";
+    case "ambush":return "　觉醒距离 "+p.trigger+"，觉醒后速度 "+p.wakeSpd;
+    case "shooter":return "　射程 "+p.range+"，每 "+p.fireEvery+" 秒一发（弹伤害 "+p.bulletDmg+"）";
+    case "healer":return "　距目标 "+p.holdDist+"，每 "+p.healEvery+" 秒给半径 "+p.radius+" 内回 "+p.amount+" 血";
+    case "greedy":return "　感知线索半径 "+p.gemDetect;
+  }
+  return "";
+}
+function showDexDetail(key,d){
+  const un=dexData[key]>0;
+  $("ddEm").textContent=d.em;
+  $("ddName").textContent=un?d.name:"？？？";
+  $("ddBio").textContent=un?(d.bio||""):"尚未遭遇。深入服务器挖掘吧。";
+  let st="",mech="";
+  if(un){
+    st="❤ 生命 "+d.hp+"　｜　⚡ 伤害 "+d.dmg+"<br>👟 速度 "+d.spd+"　｜　📏 体积 "+d.r+"　｜　⭐ 经验 "+d.xp;
+    mech="<b>行为：</b>"+(BEHAVIOR_DESC[d.behavior]||d.behavior)+fmtParams(d.behavior,d.behaviorParams);
+    if(d.shield)mech+="<br>🛡 护盾："+d.shield.layers+" 层，每层 "+d.shield.hp+" 点";
+    if(d.ghost)mech+="<br>👻 幽灵：半透明，几乎隐形";
+    if(d.aura){
+      const a=d.aura;
+      mech+="<br>"+(a.slow
+        ?"🐌 减速光环（半径 "+a.radius+"，减速 "+Math.round(a.slow*100)+"%）"
+        :"🔄 反转光环（半径 "+a.radius+"，靠近后操作反转）");
+    }
+    if(d.onDeath){
+      const od=d.onDeath;
+      if(od.type==="split")mech+="<br>💥 死亡分裂：生成 "+(enemyDef(od.into)?enemyDef(od.into).name:od.into)+" ×"+od.count+"（血量 ×"+od.hpMult+"）";
+      else if(od.type==="dropFake")mech+="<br>💥 死亡掉落假线索 ×"+od.count;
+    }
+  }
+  $("ddStats").innerHTML=st;
+  $("ddMech").innerHTML=mech;
+  $("dex").style.display="none";
+  $("dexDetail").style.display="flex";
+}
 function buildDex(){
   const grid=$("dexGrid");grid.innerHTML="";
   const items=dexOrder().map(t=>({key:t,d:EDATA.enemies[t]}));
@@ -1063,6 +1129,8 @@ function buildDex(){
         +"<div class='ct'>击杀 ×"+n+"</div>"
       :"<div class='em'>"+it.d.em+"</div><div class='nm'>？？？</div>"
         +"<div class='bio'>尚未遭遇。深入服务器挖掘吧。</div>";
+    div.style.cursor="pointer";
+    div.onclick=()=>showDexDetail(it.key,it.d);
     grid.appendChild(div);
   }
   $("dexSub").textContent="已解锁 "+got+" / "+items.length+"　｜　击杀烂点自动解锁对应条目";
@@ -1075,6 +1143,7 @@ $("btnDexBack").onclick=()=>{
   if(G&&G.escOpen)$("esc").style.display="flex";
   else{refreshHome();$("home").style.display="flex";}
 };
+$("btnDdBack").onclick=()=>{$("dexDetail").style.display="none";$("dex").style.display="flex";};
 $("btnHome1").onclick=goHome;
 $("btnHome2").onclick=goHome;
 /* ESC 暂停菜单 */
