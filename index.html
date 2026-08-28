@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>WIG Survivor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:"Microsoft YaHei",Consolas,monospace}
+#cv{display:block;width:100vw;height:100dvh;touch-action:none}
+#xpbar{position:fixed;top:0;left:0;right:0;height:5px;background:#16121f;z-index:11}
+#xpfill{height:100%;width:0;background:linear-gradient(90deg,#7d5fff,#b9a3ff)}
+#hud{position:fixed;top:max(8px,env(safe-area-inset-top));left:8px;right:8px;
+  display:flex;gap:8px;pointer-events:none;z-index:10}
+.panel{background:#0b0912cc;border:1px solid #2a2440;border-radius:6px;padding:6px 10px;
+  font-size:12px;color:#9a92b8}
+.panel b{color:#e8e2ff;font-weight:normal}
+#timeP{font-size:18px;color:#e8e2ff;min-width:64px;text-align:center}
+#lvP{color:#ffe268}
+#bossBar{position:fixed;top:max(44px,calc(env(safe-area-inset-top) + 40px));left:50%;transform:translateX(-50%);
+  width:min(520px,86vw);z-index:10;display:none}
+#bossBar .nm{color:#ff69b4;font-size:12px;text-align:center;margin-bottom:3px;text-shadow:0 0 8px #ff69b4}
+#bossBar .bg{height:10px;background:#16121f;border:1px solid #4a2040;border-radius:5px;overflow:hidden}
+#bossBar .fl{height:100%;width:100%;background:linear-gradient(90deg,#ff69b4,#ff4f7b);transition:.15s width}
+#quote{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  max-width:86vw;color:#ffb3e0;font-size:14px;text-align:center;z-index:12;pointer-events:none;
+  text-shadow:0 0 10px #70163c;transition:opacity .5s;opacity:0}
+.ov{position:fixed;inset:0;background:#05030add;z-index:50;display:none;
+  align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px;overflow:auto}
+#home h1{color:#ff69b4;font-size:clamp(26px,6vw,40px);text-shadow:2px 2px #4a1d40;margin-bottom:4px}
+#home .s{color:#8a80a8;font-size:13px;margin-bottom:26px}
+.menuBtn{width:min(300px,80vw);padding:14px;margin-top:12px;border-radius:8px;font-size:16px;
+  font-weight:bold;font-family:inherit;cursor:pointer;border:none}
+#btnPlay{background:#ff69b4;color:#fff}
+#btnDex{background:#2a2440;color:#e8e2ff;border:1px solid #4a3870}
+#home .stat{color:#544c70;font-size:11px;margin-top:24px;line-height:2}
+/* 角色选择 */
+#charsel h1{color:#ffe268;font-size:22px;margin-bottom:4px}
+#charsel .sub{color:#6b638a;font-size:12px;margin-bottom:16px}
+.charBtn{width:min(360px,88vw);display:flex;align-items:center;gap:14px;text-align:left;
+  background:#120e1e;border:1px solid #3a2f60;border-radius:8px;padding:13px 16px;
+  margin-top:10px;cursor:pointer;transition:.12s;font-family:inherit}
+.charBtn:hover{border-color:#b9a3ff;transform:translateX(4px)}
+.charBtn .em{font-size:30px}
+.charBtn .nm{color:#e8e2ff;font-size:15px;font-weight:bold}
+.charBtn .ds{color:#8a80a8;font-size:12px;margin-top:3px}
+#charsel .back{margin-top:18px;padding:10px 34px;background:#2a2440;color:#e8e2ff;
+  border:1px solid #4a3870;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
+/* 图鉴 */
+#dex h1{color:#ffe268;font-size:22px;margin-bottom:4px}
+#dex .sub{color:#6b638a;font-size:12px;margin-bottom:14px}
+#dexGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:10px;width:min(760px,94vw);max-height:62vh;overflow-y:auto;padding:4px}
+.dexItem{background:#0e0a18;border:1px solid #2a2440;border-radius:8px;padding:10px;text-align:left}
+.dexItem .em{font-size:26px}
+.dexItem .nm{color:#e8e2ff;font-size:13px;margin:4px 0}
+.dexItem .bio{color:#7a7296;font-size:11px;line-height:1.55}
+.dexItem .ct{color:#b9a3ff;font-size:10px;margin-top:4px}
+.dexItem.locked{opacity:.45}
+.dexItem.locked .em{filter:grayscale(1) brightness(.4)}
+.dexItem.locked .nm{color:#544c70}
+#dex .back{margin-top:16px;padding:10px 34px;background:#2a2440;color:#e8e2ff;
+  border:1px solid #4a3870;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
+button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-radius:6px;
+  font-size:16px;font-weight:bold;font-family:inherit;cursor:pointer}
+#dead h1{color:#ff4f7b;font-size:26px;margin-bottom:8px}
+#dead .st{background:#0e0a18;border:1px solid #2a2440;border-radius:8px;padding:14px 22px;
+  font-size:13px;color:#9a92b8;line-height:2;margin-bottom:18px}
+#dead .st b{color:#ffe268;font-size:16px}
+#lvup h2{color:#ffe268;font-size:20px;letter-spacing:2px;margin-bottom:4px}
+#lvup .sub{color:#6b638a;font-size:12px;margin-bottom:12px}
+.up{width:min(420px,92vw);background:#120e1e;border:1px solid #3a2f60;border-radius:8px;
+  padding:14px 16px;cursor:pointer;transition:.12s;text-align:left;margin-top:8px}
+.up:hover{border-color:#b9a3ff;transform:translateX(4px)}
+.up .t{color:#e8e2ff;font-size:15px}
+.up .d{color:#8a80a8;font-size:12px;margin-top:4px;line-height:1.5}
+#ending .box{max-width:560px;background:#0e0a18;border:1px solid #4a2040;border-radius:10px;padding:26px}
+#ending h1{font-size:24px;margin-bottom:14px}
+#ending p{color:#b9aecf;font-size:13px;line-height:2;text-align:left;margin-bottom:8px}
+#ending .rw{color:#ffe268;font-size:12px;margin:14px 0}
+#errbox{background:#1a0a0e;border:1px solid #7a2030;border-radius:8px;padding:16px;
+  max-width:600px;text-align:left;font-size:12px;color:#e8a0a0;line-height:1.7;
+  white-space:pre-wrap;max-height:50vh;overflow:auto}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="xpbar"><div id="xpfill"></div></div>
+<div id="hud" style="display:none">
+  <div class="panel" id="timeP">0:00</div>
+  <div class="panel">击杀 <b id="killP">0</b></div>
+  <div class="panel">等级 <b id="lvP">1</b></div>
+  <div class="panel">❤ <b id="hpP">100</b></div>
+</div>
+<div id="bossBar"><div class="nm">👑 ARG酱</div><div class="bg"><div class="fl" id="bossFill"></div></div></div>
+<div id="quote"></div>
+
+<div class="ov" id="lvup">
+  <h2>⬆ 考古工具升级</h2>
+  <div class="sub">选择一项</div>
+  <div id="upList"></div>
+</div>
+
+<div class="ov" id="dead">
+  <h1>💀 连接中断</h1>
+  <div class="st" id="deadSt"></div>
+  <button class="go" id="btnHome1">回到主页</button>
+</div>
+
+<div class="ov" id="ending">
+  <div class="box">
+    <h1 id="endTitle"></h1>
+    <div id="endBody"></div>
+    <div class="rw" id="endRw"></div>
+    <button class="go" id="btnHome2">回到主页</button>
+  </div>
+</div>
+
+<div class="ov" id="home" style="display:flex">
+  <h1>WIG Survivor</h1>
+  <div class="s">摧毁一个不存在的ARG · v0.6 角色版</div>
+  <button class="menuBtn" id="btnPlay">▶ 开始游戏</button>
+  <button class="menuBtn" id="btnDex">📖 图鉴</button>
+  <div class="stat" id="homeStat"></div>
+</div>
+
+<div class="ov" id="charsel">
+  <h1>选择考古者</h1>
+  <div class="sub">每名角色携带不同的初始武器</div>
+  <div id="charList"></div>
+  <button class="back" id="btnCharBack">← 返回</button>
+</div>
+
+<div class="ov" id="dex">
+  <h1>📖 烂点图鉴</h1>
+  <div class="sub" id="dexSub"></div>
+  <div id="dexGrid"></div>
+  <button class="back" id="btnDexBack">← 返回</button>
+</div>
+
+<div class="ov" id="err">
+  <h1 style="color:#ff4f7b;font-size:22px;margin-bottom:12px">⚙️ 数据校验失败</h1>
+  <div id="errbox"></div>
+</div>
+
+<script src="enemies.js"></script>
+<script src="tools.js"></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const cv=$("cv"),ctx=cv.getContext("2d");
+let W=0,H=0;
+const resize=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;};
+addEventListener("resize",resize);resize();
+const TAU=Math.PI*2;
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+const spriteCache={};
+function sprite(em,size){
+  const key=em+"_"+size;
+  if(spriteCache[key])return spriteCache[key];
+  const c=document.createElement("canvas");c.width=c.height=Math.ceil(size*1.3);
+  const g=c.getContext("2d");
+  g.font=Math.round(size*0.9)+"px serif";
+  g.textAlign="center";g.textBaseline="middle";
+  g.fillText(em,size*0.65,size*0.68);
+  return spriteCache[key]=c;
+}
+const drawEm=(em,x,y,s)=>{const c=sprite(em,Math.round(s));ctx.drawImage(c,x-c.width/2,y-c.height/2);};
+
+/* ================= 行为注册表 ================= */
+const BEHAVIORS={
+  chase(e,p,dt,G){
+    const pl=G.player,dx=pl.x-e.x,dy=pl.y-e.y,l=Math.hypot(dx,dy)||1;
+    const spd=e.spd*(e.slow>0?0.5:1);
+    e.x+=dx/l*spd*dt;e.y+=dy/l*spd*dt;
+  },
+  dash(e,p,dt,G){
+    if(e.cool===undefined)e.cool=p.every*Math.random();
+    e.cool-=dt;
+    if(e.dashLeft>0){
+      e.dashLeft-=dt;
+      e.x+=Math.cos(e.dashDir)*p.dashSpd*dt;
+      e.y+=Math.sin(e.dashDir)*p.dashSpd*dt;
+      return;
+    }
+    if(e.cool<=0){
+      const pl=G.player;
+      e.dashDir=Math.atan2(pl.y-e.y,pl.x-e.x);
+      e.dashLeft=p.dashTime;
+      e.cool=p.every;
+      return;
+    }
+    const pl=G.player,dx=pl.x-e.x,dy=pl.y-e.y,l=Math.hypot(dx,dy)||1;
+    e.x+=dx/l*e.spd*dt;e.y+=dy/l*e.spd*dt;
+  },
+  ambush(e,p,dt,G){
+    const pl=G.player,dx=pl.x-e.x,dy=pl.y-e.y,l=Math.hypot(dx,dy)||1;
+    if(!e.woken){
+      if(l<p.trigger){e.woken=true;
+        G.dmgTexts.push({x:e.x,y:e.y-24,t:"🤡！",life:0.8});}
+      return;
+    }
+    e.x+=dx/l*p.wakeSpd*dt;e.y+=dy/l*p.wakeSpd*dt;
+  },
+  shooter(e,p,dt,G){
+    const pl=G.player,dx=pl.x-e.x,dy=pl.y-e.y,l=Math.hypot(dx,dy)||1;
+    if(l>p.range){e.x+=dx/l*e.spd*dt;e.y+=dy/l*e.spd*dt;}
+    else if(l<p.range*0.6){e.x-=dx/l*e.spd*0.6*dt;e.y-=dy/l*e.spd*0.6*dt;}
+    if(e.fire===undefined)e.fire=p.fireEvery*Math.random();
+    e.fire-=dt;
+    if(e.fire<=0&&l<p.range*1.3){
+      e.fire=p.fireEvery;
+      G.ebullets.push({x:e.x,y:e.y,vx:dx/l*p.bulletSpd,vy:dy/l*p.bulletSpd,life:5,dmg:p.bulletDmg});
+    }
+  },
+  healer(e,p,dt,G){
+    const pl=G.player,dx=pl.x-e.x,dy=pl.y-e.y,l=Math.hypot(dx,dy)||1;
+    if(l<p.holdDist*0.8){e.x-=dx/l*e.spd*dt;e.y-=dy/l*e.spd*dt;}
+    else if(l>p.holdDist*1.2){e.x+=dx/l*e.spd*dt;e.y+=dy/l*e.spd*dt;}
+    if(e.heal===undefined)e.heal=p.healEvery;
+    e.heal-=dt;
+    if(e.heal<=0){
+      e.heal=p.healEvery;
+      let healed=false;
+      for(const o of G.enemies){
+        if(o===e||o.dead)continue;
+        const ddx=o.x-e.x,ddy=o.y-e.y;
+        if(ddx*ddx+ddy*ddy<p.radius*p.radius){o.hp=Math.min(o.maxhp,o.hp+p.amount);healed=true;}
+      }
+      if(healed)G.fx.push({x:e.x,y:e.y,life:0.4,max:0.4,r:p.radius,heal:true});
+    }
+  },
+  greedy(e,p,dt,G){
+    let tg=null,td=p.gemDetect*p.gemDetect;
+    for(const g of G.gems){
+      if(g.fake)continue;
+      const dx=g.x-e.x,dy=g.y-e.y,d=dx*dx+dy*dy;
+      if(d<td){td=d;tg=g;}
+    }
+    let mvx,mvy;
+    if(tg){mvx=tg.x-e.x;mvy=tg.y-e.y;}
+    else{const pl=G.player;mvx=pl.x-e.x;mvy=pl.y-e.y;}
+    const l=Math.hypot(mvx,mvy)||1;
+    e.x+=mvx/l*e.spd*dt;e.y+=mvy/l*e.spd*dt;
+    if(tg){
+      const dx=tg.x-e.x,dy=tg.y-e.y;
+      if(dx*dx+dy*dy<e.r*e.r){
+        tg.dead=true;e.hp=Math.min(e.maxhp,e.hp+2);
+        G.dmgTexts.push({x:e.x,y:e.y-e.r-8,t:"吞",life:0.5});
+      }
+    }
+  }
+};
+const ON_DEATH={
+  split(G,e,p){
+    for(let i=0;i<p.count;i++){
+      const a=Math.random()*TAU;
+      spawnEnemy(G,p.into,e.x+Math.cos(a)*14,e.y+Math.sin(a)*14,p.hpMult);
+    }
+  },
+  dropFake(G,e,p){
+    for(let i=0;i<p.count;i++){
+      const a=Math.random()*TAU;
+      G.gems.push({x:e.x+Math.cos(a)*16,y:e.y+Math.sin(a)*16,fake:true});
+    }
+  }
+};
+const WEAPON_TYPES={
+  projectile(G,w,st,dt){
+    if(G.shootCd[w.id]>0)return;
+    const pl=G.player;
+    let list=G.enemies.filter(e=>!e.dead);
+    if(G.boss&&!G.boss.shieldOn&&!G.boss.mercy)list=list.concat([G.boss]);
+    const targets=list
+      .map(e=>({e,d:(e.x-pl.x)*(e.x-pl.x)+(e.y-pl.y)*(e.y-pl.y)}))
+      .sort((a,b)=>a.d-b.d)
+      .slice(0,st.count);
+    for(const t of targets){
+      const a=Math.atan2(t.e.y-pl.y,t.e.x-pl.x);
+      G.bullets.push({x:pl.x,y:pl.y,vx:Math.cos(a)*st.speed,vy:Math.sin(a)*st.speed,
+        life:st.life,dmg:st.damage,pierce:st.pierce});
+    }
+    G.shootCd[w.id]=st.cooldown;
+  },
+  aura(G,w,st,dt){
+    if(G.shootCd[w.id]>0)return;
+    G.shootCd[w.id]=st.tick;
+    const pl=G.player;
+    const hit=(e)=>{
+      const dx=e.x-pl.x,dy=e.y-pl.y;
+      return dx*dx+dy*dy<st.radius*st.radius;
+    };
+    for(const e of G.enemies)if(!e.dead&&hit(e))hurtEnemy(e,st.damage);
+    if(G.boss&&!G.boss.shieldOn&&!G.boss.mercy&&hit(G.boss))hurtBoss(st.damage);
+  },
+  orbit(G,w,st,dt){
+    G.orbitAng+=st.rot*dt;
+    const pl=G.player;
+    for(let i=0;i<st.count;i++){
+      const a=G.orbitAng+i/st.count*TAU;
+      const bx=pl.x+Math.cos(a)*st.radius,by=pl.y+Math.sin(a)*st.radius;
+      const hit=(e)=>{
+        const dx=e.x-bx,dy=e.y-by;
+        return dx*dx+dy*dy<(e.r+10)*(e.r+10);
+      };
+      for(const e of G.enemies)
+        if(!e.dead&&!(e.hitCd>0)&&hit(e)){hurtEnemy(e,st.damage);e.hitCd=0.45;}
+      if(G.boss&&!G.boss.shieldOn&&!G.boss.mercy&&!(G.boss.hitCd>0)&&hit(G.boss)){
+        hurtBoss(st.damage);G.boss.hitCd=0.45;}
+    }
+  },
+  nova(G,w,st,dt){
+    if(G.shootCd[w.id]>0)return;
+    G.shootCd[w.id]=st.cooldown;
+    const off=Math.random()*TAU;
+    for(let i=0;i<st.count;i++){
+      const a=off+i/st.count*TAU;
+      G.bullets.push({x:G.player.x,y:G.player.y,
+        vx:Math.cos(a)*st.speed,vy:Math.sin(a)*st.speed,
+        life:st.life,dmg:st.damage,pierce:1});
+    }
+    G.fx.push({x:G.player.x,y:G.player.y,life:0.4,max:0.4,r:40});
+  }
+};
+const PASSIVE_KEYS={
+  flatDamage:(G,v)=>G.pstat.flatDamage+=v,
+  cooldownMult:(G,v)=>G.pstat.cooldownMult*=v,
+  count:(G,v)=>G.pstat.count+=v,
+  moveMult:(G,v)=>G.pstat.moveMult+=v,
+  maxhp:(G,v)=>{G.player.maxhp+=v;G.player.hp=Math.min(G.player.maxhp,G.player.hp+v);},
+  magnetMult:(G,v)=>G.pstat.magnetMult+=v,   /* ★ 修复：加法累加，不再是乘法 */
+  xpMult:(G,v)=>G.pstat.xpMult+=v,
+  armor:(G,v)=>G.pstat.armor+=v
+};
+
+/* ================= 数据校验 ================= */
+const EDATA=window.ENEMY_DATA,TOOLS=window.TOOLS_DATA;
+const PROBLEMS=[];
+if(!EDATA||!TOOLS){
+  $("errbox").textContent="找不到 enemies.js 或 tools.js。\n请确认文件名与HTML同目录、UTF-8编码。";
+  $("err").style.display="flex";
+  throw new Error("数据文件缺失");
+}
+(function validate(){
+  for(const id in EDATA.enemies){
+    const e=EDATA.enemies[id];
+    for(const k of["em","name","hp","spd","dmg","r","xp","behavior"])
+      if(e[k]===undefined)PROBLEMS.push('敌人 "'+id+'" 缺少字段: '+k);
+    if(!BEHAVIORS[e.behavior])PROBLEMS.push('敌人 "'+id+'" 的行为未注册');
+    if(e.onDeath&&!ON_DEATH[e.onDeath.type])PROBLEMS.push('敌人 "'+id+'" 的死亡效果未注册');
+  }
+  EDATA.waves.forEach((row,i)=>{
+    (row.types||[]).forEach(t=>{
+      if(!EDATA.enemies[t])PROBLEMS.push('波次#'+i+' 引用了不存在的敌人 "'+t+'"');
+    });
+  });
+  for(const w of TOOLS.weapons){
+    if(!WEAPON_TYPES[w.type])PROBLEMS.push('武器 "'+w.id+'" 类型未注册');
+    if(!w.base||!w.perLevel)PROBLEMS.push('武器 "'+w.id+'" 缺少 base/perLevel');
+  }
+  for(const p of TOOLS.passives)
+    for(const k in p.perLevel||{})
+      if(!PASSIVE_KEYS[k])PROBLEMS.push('被动 "'+p.id+'" 的字段未注册');
+  for(const c of TOOLS.characters||[])
+    if(!TOOLS.weapons.find(w=>w.id===c.weapon))
+      PROBLEMS.push('角色 "'+c.id+'" 的初始武器 "'+c.weapon+'" 不存在');
+})();
+if(PROBLEMS.length){
+  $("errbox").textContent=PROBLEMS.join("\n");
+  $("err").style.display="flex";
+  throw new Error("数据校验失败");
+}
+
+const QUOTES={
+  p1:["你们根本看不懂我的伏笔！","这是后现代叙事！","这个转折，三年后你们会懂的。"],
+  p2:["卡住了？这是刻意的！","99%是一种艺术。","BUG是设定的一部分！"],
+  p3:["……","……对不起。","我以为，起码这样看起来像那么回事。"],
+  mercy:"🔍 放下武器，走近她"
+};
+
+/* ================= 图鉴存档 ================= */
+let dexData={};
+try{dexData=JSON.parse(localStorage.getItem("darg_dex")||"{}");}catch(e){dexData={};}
+function recordDex(type){
+  dexData[type]=(dexData[type]||0)+1;
+  localStorage.setItem("darg_dex",JSON.stringify(dexData));
+}
+function dexOrder(){
+  const order=[];
+  for(const row of EDATA.waves)for(const t of row.types)
+    if(!order.includes(t))order.push(t);
+  for(const t in EDATA.enemies)if(!order.includes(t))order.push(t);
+  return order;
+}
+
+/* ================= 游戏状态 ================= */
+let G=null;
+function newGame(charId){
+  const ch=TOOLS.characters.find(c=>c.id===charId)||TOOLS.characters[0];
+  /* ★ 彻底重置所有界面状态 */
+  $("bossBar").style.display="none";
+  $("bossFill").style.width="100%";
+  $("quote").style.opacity=0;
+  $("home").style.display="none";
+  $("charsel").style.display="none";
+  $("dead").style.display="none";
+  $("ending").style.display="none";
+  $("lvup").style.display="none";
+  $("hud").style.display="flex";
+  G={
+    running:true,paused:false,over:false,time:0,spawnT:0,orbitAng:0,
+    char:ch,
+    player:{x:W/2,y:H/2,r:15,hp:100,maxhp:100,spd:150,lv:1,xp:0,xpNeed:6,inv:0,slowT:0},
+    keys:{},joy:null,
+    enemies:[],bullets:[],ebullets:[],gems:[],fx:[],dmgTexts:[],
+    kills:0,shootCd:{},
+    weapons:TOOLS.weapons.map(w=>({id:w.id,lv:w.id===ch.weapon?1:0})),
+    passives:{},
+    pstat:{flatDamage:0,cooldownMult:1,count:0,moveMult:0,
+           magnetMult:0,xpMult:1,armor:0},   /* ★ magnetMult从0起，加法 */
+    boss:null,bossDone:false,skipBtn:null,
+    quoteT:6,invertT:0,flashT:0,flashCd:8,
+    pendingLv:0
+  };
+}
+function goHome(){
+  G=null;
+  $("bossBar").style.display="none";
+  $("quote").style.opacity=0;
+  ["hud","dead","ending","lvup","charsel","dex"].forEach(id=>$(id).style.display="none");
+  refreshHome();
+  $("home").style.display="flex";
+}
+const weaponDef=id=>TOOLS.weapons.find(w=>w.id===id);
+const enemyDef=id=>EDATA.enemies[id];
+
+/* ================= 输入 ================= */
+addEventListener("keydown",e=>{if(G)G.keys[e.key.toLowerCase()]=true;});
+addEventListener("keyup",e=>{if(G)G.keys[e.key.toLowerCase()]=false;});
+cv.addEventListener("touchstart",e=>{e.preventDefault();
+  const t=e.touches[0];if(G)G.joy={ox:t.clientX,oy:t.clientY,x:t.clientX,y:t.clientY};},{passive:false});
+cv.addEventListener("touchmove",e=>{e.preventDefault();
+  if(G&&G.joy){const t=e.touches[0];G.joy.x=t.clientX;G.joy.y=t.clientY;}},{passive:false});
+cv.addEventListener("touchend",()=>{if(G)G.joy=null;});
+
+/* ================= 刷怪 ================= */
+function spawnEnemy(G,type,x,y,hpMult,elite){
+  const d=enemyDef(type);if(!d)return;
+  if(x===undefined){
+    const a=Math.random()*TAU,rr=Math.max(W,H)*0.6+80;
+    x=G.player.x+Math.cos(a)*rr;y=G.player.y+Math.sin(a)*rr;
+  }
+  const el=elite||false;
+  const scale=(hpMult||1)*(1+Math.floor(G.time/60)*(EDATA.hpScalePerMinute||0))*(el?5:1);
+  const e={type,x,y,hp:d.hp*scale,maxhp:d.hp*scale,
+    spd:d.spd*(el?0.85:1),r:d.r*(el?1.5:1),slow:0,hitCd:0,elite:el};
+  if(d.shield){e.shield=d.shield.layers;e.shieldHp=d.shield.hp;}
+  if(d.ghost)e.ghost=true;
+  if(el)G.dmgTexts.push({x,y:y-30,t:"⚠ 精英",life:1.2});
+  G.enemies.push(e);
+}
+function curWave(){
+  let w=EDATA.waves[0];
+  for(const row of EDATA.waves)if(G.time>=row.t)w=row;
+  return w;
+}
+
+/* ================= 武器数值 ================= */
+function weaponStats(w){
+  const d=weaponDef(w.id),lv=w.lv,b=d.base,p=d.perLevel;
+  const st={};
+  for(const k in b){
+    const v=b[k];
+    st[k]=typeof v==="number"?v+(p[k]||0)*(lv-1):v;
+  }
+  if(b.cooldown!==undefined)
+    st.cooldown=b.cooldown*Math.pow(p.cooldownMult||1,lv-1)*G.pstat.cooldownMult;
+  st.damage=(st.damage||0)+G.pstat.flatDamage;
+  if(st.count!==undefined)st.count+=G.pstat.count;
+  return st;
+}
+
+/* ================= 战斗 ================= */
+function hurtEnemy(e,dmg){
+  if(e.isBoss){hurtBoss(dmg);return;}
+  const d=enemyDef(e.type);
+  if(e.shield>0){
+    e.shieldHp-=dmg;
+    G.dmgTexts.push({x:e.x,y:e.y-18,t:"盾",life:0.4});
+    if(e.shieldHp<=0){
+      e.shield--;e.shieldHp=d.shield.hp;
+      G.dmgTexts.push({x:e.x,y:e.y-32,t:"解码中…",life:0.9});
+    }
+    return;
+  }
+  e.hp-=dmg;
+  G.dmgTexts.push({x:e.x,y:e.y-18,t:dmg,life:0.5});
+  if(e.hp<=0&&!e.dead)killEnemy(e);
+}
+function killEnemy(e){
+  e.dead=true;G.kills++;
+  recordDex(e.type);
+  const d=enemyDef(e.type);
+  const xpN=d.xp*(e.elite?5:1);
+  for(let i=0;i<xpN;i++){
+    const a=Math.random()*TAU;
+    G.gems.push({x:e.x+Math.cos(a)*8,y:e.y+Math.sin(a)*8});
+  }
+  G.fx.push({x:e.x,y:e.y,life:0.25,max:0.25,r:e.r});
+  if(d.onDeath)ON_DEATH[d.onDeath.type](G,e,d.onDeath);
+}
+function hurtPlayer(dmg){
+  const p=G.player;
+  if(p.inv>0||G.over)return;
+  const real=Math.max(1,Math.round(dmg*(1-Math.min(0.6,G.pstat.armor))));
+  p.hp-=real;p.inv=0.6;
+  if(p.hp<=0){p.hp=0;die();}
+}
+
+/* ================= Boss ================= */
+function spawnBoss(){
+  const b=EDATA.boss;
+  const a=Math.random()*TAU;
+  G.boss={isBoss:true,x:G.player.x+Math.cos(a)*320,y:G.player.y+Math.sin(a)*320,
+    hp:b.hp,maxhp:b.hp,spd:b.spd,dmg:b.dmg,r:b.r,slow:0,hitCd:0,
+    t:0,phase:1,fireT:2.5,spawnT:5,gemT:0,vulnT:0,shieldOn:false,mercy:false};
+  $("bossBar").style.display="block";
+  say("👑 "+b.name+"出现了。");
+}
+function bossRadial(n,spd,dmg){
+  const off=Math.random()*TAU;
+  for(let i=0;i<n;i++){
+    const a=off+i/n*TAU;
+    G.ebullets.push({x:G.boss.x,y:G.boss.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life:6,dmg});
+  }
+}
+function updateBoss(dt){
+  const b=G.boss,pl=G.player;
+  b.t+=dt;
+  const frac=b.hp/b.maxhp;
+  const np=frac>0.6?1:frac>0.25?2:3;
+  if(np!==b.phase){
+    b.phase=np;b.fireT=1.5;
+    if(np===2)say("👑「BUG是设定的一部分！」");
+    if(np===3)say("👑「……」");
+  }
+  if(b.mercy){
+    if(Math.random()<dt*6)G.fx.push({x:b.x+R(-10,10),y:b.y+R(-4,4),life:0.3,max:0.3,r:6});
+    if(!b.mercySaid){b.mercySaid=true;say(QUOTES.mercy,9999);}
+    const dx=pl.x-b.x,dy=pl.y-b.y;
+    if(dx*dx+dy*dy<70*70)gameEnd(true);
+    return;
+  }
+  if(b.phase===2){
+    b.shieldOn=b.vulnT<=0;
+    if(b.shieldOn&&!G.skipBtn){
+      const a=Math.random()*TAU,rr=R(180,340);
+      G.skipBtn={x:pl.x+Math.cos(a)*rr,y:pl.y+Math.sin(a)*rr,life:12};
+    }
+    b.gemT-=dt;
+    if(b.gemT<=0){b.gemT=2;
+      const a=Math.random()*TAU;
+      G.gems.push({x:b.x+Math.cos(a)*R(40,120),y:b.y+Math.sin(a)*R(40,120),fake:true});}
+  }else b.shieldOn=false;
+  if(b.vulnT>0)b.vulnT-=dt;
+
+  const spd=b.phase===3?Math.max(8,b.spd*frac*1.6):b.spd;
+  const dx=pl.x-b.x,dy=pl.y-b.y,l=Math.hypot(dx,dy)||1;
+  if(l>150){b.x+=dx/l*spd*dt;b.y+=dy/l*spd*dt;}
+
+  b.fireT-=dt;
+  if(b.fireT<=0){
+    if(b.phase===1){bossRadial(14,130,b.dmg*0.6);b.fireT=2.4;}
+    else if(b.phase===2){if(!b.shieldOn)bossRadial(10,110,b.dmg*0.6);b.fireT=3.5;}
+    else{
+      const a=Math.atan2(pl.y-b.y,pl.x-b.x);
+      G.ebullets.push({x:b.x,y:b.y,vx:Math.cos(a)*110,vy:Math.sin(a)*110,life:6,dmg:b.dmg*0.5});
+      b.fireT=2.8;
+    }
+  }
+  if(b.phase===1){
+    b.spawnT-=dt;
+    if(b.spawnT<=0){b.spawnT=6;
+      spawnEnemy(G,"page",b.x+R(-40,40),b.y+R(-40,40));
+      spawnEnemy(G,"bot",b.x+R(-40,40),b.y+R(-40,40));}
+  }
+  const cdx=pl.x-b.x,cdy=pl.y-b.y;
+  if(cdx*cdx+cdy*cdy<(b.r+pl.r)*(b.r+pl.r))hurtPlayer(b.dmg);
+}
+function hurtBoss(dmg){
+  const b=G.boss;
+  if(!b||b.mercy)return;
+  if(b.shieldOn){
+    if(Math.random()<0.15)G.dmgTexts.push({x:b.x,y:b.y-b.r-10,t:"99%",life:0.6});
+    return;
+  }
+  b.hp-=dmg;
+  G.dmgTexts.push({x:b.x,y:b.y-24,t:dmg,life:0.5});
+  if(b.hp<=b.maxhp*0.05&&!b.mercy)b.mercy=true;
+  if(b.hp<=0)gameEnd(false);
+}
+
+/* ================= 台词 ================= */
+let quoteTimer=null;
+function say(txt,dur){
+  const q=$("quote");
+  q.textContent=txt;q.style.opacity=1;
+  clearTimeout(quoteTimer);
+  quoteTimer=setTimeout(()=>q.style.opacity=0,dur||3500);
+}
+
+/* ================= 升级 ================= */
+function gainXp(n){
+  const p=G.player;
+  p.xp+=n*G.pstat.xpMult;
+  let ups=0;
+  while(p.xp>=p.xpNeed){
+    p.xp-=p.xpNeed;p.lv++;
+    p.xpNeed=6+p.lv*3;
+    ups++;
+  }
+  if(ups){
+    G.pendingLv=(G.pendingLv||0)+ups;
+    if(!G.paused)openLevelUp();
+  }
+}
+function rollUpgrades(){
+  const pool=[];
+  const owned=G.weapons.filter(x=>x.lv>0).length;
+  for(const w of G.weapons){
+    const def=weaponDef(w.id);
+    if(w.lv>0&&w.lv<def.maxLevel)pool.push({kind:"weapon",id:w.id});
+    if(w.lv===0&&owned<4)pool.push({kind:"weapon",id:w.id});
+  }
+  for(const p of TOOLS.passives){
+    const lv=G.passives[p.id]||0;
+    if(lv<p.maxLevel)pool.push({kind:"passive",id:p.id});
+  }
+  const out=[];
+  while(out.length<3&&pool.length)out.push(pool.splice(R(0,pool.length-1),1)[0]);
+  return out;
+}
+function openLevelUp(){
+  G.paused=true;
+  const opts=rollUpgrades();
+  if(!opts.length){
+    if((G.pendingLv||0)>1){G.pendingLv--;openLevelUp();return;}
+    G.pendingLv=0;G.paused=false;return;
+  }
+  const box=$("upList");box.innerHTML="";
+  opts.forEach(o=>{
+    let title,desc;
+    if(o.kind==="weapon"){
+      const d=weaponDef(o.id),w=G.weapons.find(x=>x.id===o.id);
+      title=d.em+" "+d.name+(w.lv===0?"（新武器！）":"  Lv"+w.lv+"→"+(w.lv+1));
+      desc=d.desc;
+    }else{
+      const d=TOOLS.passives.find(p=>p.id===o.id);
+      const lv=G.passives[o.id]||0;
+      title=d.em+" "+d.name+"  Lv"+lv+"→"+(lv+1);
+      desc=d.desc;
+    }
+    const div=document.createElement("div");
+    div.className="up";
+    div.innerHTML="<div class='t'>"+title+"</div><div class='d'>"+desc+"</div>";
+    div.onclick=()=>{
+      if(o.kind==="weapon")G.weapons.find(x=>x.id===o.id).lv++;
+      else{
+        G.passives[o.id]=(G.passives[o.id]||0)+1;
+        const def=TOOLS.passives.find(p=>p.id===o.id);
+        for(const k in def.perLevel)PASSIVE_KEYS[k]&&PASSIVE_KEYS[k](G,def.perLevel[k]);
+      }
+      G.pendingLv=(G.pendingLv||0)-1;
+      if(G.pendingLv>0)openLevelUp();
+      else{$("lvup").style.display="none";G.paused=false;}
+    };
+    box.appendChild(div);
+  });
+  $("lvup").style.display="flex";
+}
+
+/* ================= 结算 / 结局 ================= */
+function fragsBank(extra){
+  const frags=extra!==undefined?extra:(5+Math.floor(G.kills/20)+Math.floor(G.time/30));
+  const bank=(+(localStorage.getItem("darg_frags")||0))+frags;
+  localStorage.setItem("darg_frags",bank);
+  return {frags,bank};
+}
+function die(){
+  if(G.over)return;
+  G.over=true;G.running=false;
+  const {frags,bank}=fragsBank();
+  const best=+(localStorage.getItem("darg_best")||0);
+  if(G.time>best)localStorage.setItem("darg_best",Math.floor(G.time));
+  const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
+  $("deadSt").innerHTML=
+    "存活时间：<b>"+m+"分"+s+"秒</b><br>击杀烂点：<b>"+G.kills+"</b><br>等级：<b>"+G.player.lv+"</b><br>"+
+    "考古碎片：<b>+"+frags+"</b>（累计 "+bank+" 🧩）";
+  $("dead").style.display="flex";
+}
+function gameEnd(good){
+  if(G.over)return;
+  G.over=true;G.running=false;
+  recordDex("__boss");
+  $("bossBar").style.display="none";
+  const {frags,bank}=fragsBank(good?80:30);
+  const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
+  if(good){
+    $("endTitle").textContent="✅ 真结局 · 重新开始";
+    $("endTitle").style.color="#39d98a";
+    $("endBody").innerHTML=
+      "<p>她抬起头：「……你们赢了。都赢了。」</p>"+
+      "<p>「这个ARG，从一开始就是坨屎。我用假线索和循环跳转撑起了三十分钟的『深度』。」</p>"+
+      "<p>「我以为做不出真东西，起码能做出『看起来像』的东西。」</p>"+
+      "<p>「……谢谢你们把它拆了。我从头来一次。这次，不搞花里胡哨的。」</p>"+
+      "<p style='color:#8a80a8;font-size:12px'>📦 系统提示：获得【重新开始的资格】——74%企划 · 敬请期待</p>";
+  }else{
+    $("endTitle").textContent="💀 坏结局 · 注销";
+    $("endTitle").style.color="#ff4f7b";
+    $("endBody").innerHTML=
+      "<p>她倒下：「果然……连通关的人，都只想看我死。」</p>"+
+      "<p>「再见了。这次的ARG，不会有下次了。」</p>"+
+      "<p style='color:#544c70;font-size:12px'>——她只是想要一个不用打了的结局。下次试试放下武器？</p>";
+  }
+  $("endRw").textContent="用时 "+m+"分"+s+"秒 ｜ 击杀 "+G.kills+" ｜ 考古碎片 +"+frags+"（累计 "+bank+" 🧩）";
+  $("ending").style.display="flex";
+}
+
+/* ================= 更新 ================= */
+function update(dt){
+  if(!G.running||G.paused)return;
+  G.time+=dt;
+  const p=G.player;
+
+  let inverted=false;
+  for(const e of G.enemies){
+    const d=enemyDef(e.type);
+    if(d.aura&&d.aura.invert){
+      const dx=p.x-e.x,dy=p.y-e.y;
+      if(dx*dx+dy*dy<d.aura.radius*d.aura.radius){inverted=true;break;}
+    }
+  }
+  if(inverted){
+    G.invertT=Math.max(G.invertT,0.1);
+    G.flashCd-=dt;
+    if(G.flashCd<=0){G.flashCd=R(6,10);G.flashT=0.25;}
+  }
+  if(G.invertT>0)G.invertT-=dt;
+  if(G.flashT>0)G.flashT-=dt;
+
+  let mx=0,my=0;
+  if(G.keys["w"]||G.keys["arrowup"])my-=1;
+  if(G.keys["s"]||G.keys["arrowdown"])my+=1;
+  if(G.keys["a"]||G.keys["arrowleft"])mx-=1;
+  if(G.keys["d"]||G.keys["arrowright"])mx+=1;
+  if(G.joy){
+    const dx=G.joy.x-G.joy.ox,dy=G.joy.y-G.joy.oy,l=Math.hypot(dx,dy);
+    if(l>10){mx=dx/l;my=dy/l;}
+  }
+  if(G.invertT>0){mx=-mx;my=-my;}
+  const ml=Math.hypot(mx,my);
+  const slowMul=p.slowT>0?0.55:1;
+  if(ml>0){
+    const spd=p.spd*(1+G.pstat.moveMult)*slowMul;
+    p.x+=mx/ml*spd*dt;p.y+=my/ml*spd*dt;
+  }
+
+  for(const w of G.weapons){
+    if(w.lv<=0)continue;
+    G.shootCd[w.id]=(G.shootCd[w.id]||0)-dt;
+    const def=weaponDef(w.id);
+    if(WEAPON_TYPES[def.type])WEAPON_TYPES[def.type](G,w,weaponStats(w),dt);
+  }
+
+  for(const b of G.bullets){
+    b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
+    if(b.life<=0){b.dead=true;continue;}
+    if(G.boss){
+      const bs=G.boss,dx=bs.x-b.x,dy=bs.y-b.y;
+      if(dx*dx+dy*dy<bs.r*bs.r&&!(b.hit&&b.hit.has(bs))){
+        hurtBoss(b.dmg);
+        if(b.pierce>0){b.pierce--;(b.hit=b.hit||new Set()).add(bs);}
+        else{b.dead=true;break;}
+      }
+    }
+    if(b.dead)continue;
+    for(const e of G.enemies){
+      if(e.dead||b.hit&&b.hit.has(e))continue;
+      const dx=e.x-b.x,dy=e.y-b.y;
+      if(dx*dx+dy*dy<e.r*e.r){
+        hurtEnemy(e,b.dmg);
+        if(b.pierce>0){b.pierce--;(b.hit=b.hit||new Set()).add(e);}
+        else{b.dead=true;break;}
+      }
+    }
+  }
+  G.bullets=G.bullets.filter(b=>!b.dead);
+
+  for(const b of G.ebullets){
+    b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
+    if(b.life<=0){b.dead=true;continue;}
+    const dx=p.x-b.x,dy=p.y-b.y;
+    if(dx*dx+dy*dy<(p.r+4)*(p.r+4)){b.dead=true;hurtPlayer(b.dmg);}
+  }
+  G.ebullets=G.ebullets.filter(b=>!b.dead);
+
+  for(const e of G.enemies){
+    if(e.dead)continue;
+    if(e.hitCd>0)e.hitCd-=dt;
+    const d=enemyDef(e.type);
+    if(BEHAVIORS[d.behavior])BEHAVIORS[d.behavior](e,d.behaviorParams||{},dt,G);
+    if(e.slow>0)e.slow-=dt;
+    if(d.aura&&!d.aura.invert){
+      const dx=p.x-e.x,dy=p.y-e.y,rr=d.aura.radius;
+      if(dx*dx+dy*dy<rr*rr&&d.aura.slow)p.slowT=Math.max(p.slowT,0.15);
+    }
+    const dx=p.x-e.x,dy=p.y-e.y;
+    if(dx*dx+dy*dy<(e.r+p.r)*(e.r+p.r))hurtPlayer(d.dmg);
+  }
+  G.enemies=G.enemies.filter(e=>!e.dead);
+
+  if(!G.boss&&!G.bossDone&&G.time>=EDATA.bossTime)spawnBoss();
+  if(G.boss){
+    if(G.boss.hitCd>0)G.boss.hitCd-=dt;
+    updateBoss(dt);
+  }
+
+  if(G.skipBtn){
+    G.skipBtn.life-=dt;
+    const dx=p.x-G.skipBtn.x,dy=p.y-G.skipBtn.y;
+    if(dx*dx+dy*dy<(p.r+16)*(p.r+16)){
+      G.boss.vulnT=6;G.skipBtn=null;
+      say("⏭️ 护盾解除！6秒输出窗口！",1500);
+      G.fx.push({x:p.x,y:p.y,life:0.5,max:0.5,r:60});
+    }else if(G.skipBtn.life<=0)G.skipBtn=null;
+  }
+
+  /* ★ 磁吸范围：基础60 × (1+加成) */
+  const magnet=60*(1+G.pstat.magnetMult);
+  for(const g of G.gems){
+    const dx=p.x-g.x,dy=p.y-g.y,l=Math.hypot(dx,dy);
+    if(l<magnet){const pull=Math.max(240,400-l);g.x+=dx/l*pull*dt;g.y+=dy/l*pull*dt;}
+    if(l<p.r+6){
+      g.dead=true;
+      if(g.fake){p.slowT=2.5;
+        G.dmgTexts.push({x:p.x,y:p.y-26,t:"🟡 假线索！",life:1.2});}
+      else gainXp(1);
+      G.fx.push({x:g.x,y:g.y,life:0.15,max:0.15,r:8});
+    }
+  }
+  G.gems=G.gems.filter(g=>!g.dead);
+
+  if(p.inv>0)p.inv-=dt;
+  if(p.slowT>0)p.slowT-=dt;
+  G.spawnT-=dt;
+  if(G.spawnT<=0){
+    if(G.boss){
+      const w=curWave();
+      spawnEnemy(G,w.types[R(0,w.types.length-1)]);
+      G.spawnT=2.5;
+    }else{
+      const w=curWave();
+      const elite=G.time>150&&Math.random()<0.08;
+      for(let i=0;i<w.batch;i++)
+        spawnEnemy(G,w.types[R(0,w.types.length-1)],undefined,undefined,1,elite&&i===0);
+      G.spawnT=w.every;
+    }
+  }
+
+  G.quoteT-=dt;
+  if(G.quoteT<=0&&!G.over){
+    G.quoteT=7;
+    const arr=G.boss?QUOTES["p"+G.boss.phase]:null;
+    if(arr&&arr.length)say("👑「"+arr[R(0,arr.length-1)]+"」");
+  }
+
+  for(const f of G.fx)f.life-=dt;
+  G.fx=G.fx.filter(f=>f.life>0);
+  for(const d of G.dmgTexts){d.life-=dt;d.y-=30*dt;}
+  G.dmgTexts=G.dmgTexts.filter(d=>d.life>0);
+
+  if(G.enemies.length>220)G.enemies.splice(0,G.enemies.length-220);
+  if(G.gems.length>300)G.gems.splice(0,G.gems.length-300);
+  if(G.ebullets.length>150)G.ebullets.splice(0,G.ebullets.length-150);
+
+  if(G.boss)$("bossFill").style.width=Math.max(0,G.boss.hp/G.boss.maxhp*100)+"%";
+}
+
+/* ================= 渲染 ================= */
+function render(){
+  ctx.fillStyle="#08060e";ctx.fillRect(0,0,W,H);
+  if(!G)return;
+  const gs=64,ox=-(G.player.x%gs),oy=-(G.player.y%gs);
+  ctx.strokeStyle="#141020";ctx.lineWidth=1;ctx.beginPath();
+  for(let x=ox;x<W;x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+  for(let y=oy;y<H;y+=gs){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+  ctx.stroke();
+
+  const p=G.player;
+
+  for(const w of G.weapons){
+    if(w.lv<=0||weaponDef(w.id).type!=="aura")continue;
+    const st=weaponStats(w);
+    ctx.strokeStyle="rgba(127,212,255,.25)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(p.x,p.y,st.radius,0,TAU);ctx.stroke();
+  }
+  for(const w of G.weapons){
+    if(w.lv<=0||weaponDef(w.id).type!=="orbit")continue;
+    const st=weaponStats(w);
+    for(let i=0;i<st.count;i++){
+      const a=G.orbitAng+i/st.count*TAU;
+      drawEm("⛓️",p.x+Math.cos(a)*st.radius,p.y+Math.sin(a)*st.radius,22);
+    }
+  }
+
+  const blink=p.inv>0&&Math.floor(p.inv*12)%2===0;
+  if(!blink){
+    if(p.slowT>0)ctx.globalAlpha=0.6;
+    drawEm(G.char.em,p.x,p.y,30);   /* 角色emoji */
+    ctx.globalAlpha=1;
+  }
+
+  for(const e of G.enemies){
+    const d=enemyDef(e.type);
+    if(e.ghost&&!(e.slow>0))ctx.globalAlpha=0.18;
+    if(e.elite){ctx.shadowColor="#ffe268";ctx.shadowBlur=14;}
+    drawEm(d.em,e.x,e.y,e.r*2);
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+    if(e.shield>0){
+      ctx.strokeStyle="#7fd4ff";ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r+6,0,TAU);ctx.stroke();
+    }
+    if(e.hp<e.maxhp||e.shield>0){
+      ctx.fillStyle="#000a";ctx.fillRect(e.x-14,e.y-e.r-9,28,4);
+      ctx.fillStyle=e.shield>0?"#7fd4ff":(e.elite?"#ffe268":"#ff4f7b");
+      const hpr=e.shield>0?e.shieldHp/d.shield.hp:e.hp/e.maxhp;
+      ctx.fillRect(e.x-14,e.y-e.r-9,28*hpr,4);
+    }
+  }
+
+  if(G.boss){
+    const b=G.boss;
+    ctx.shadowColor="#ff69b4";ctx.shadowBlur=25;
+    drawEm("👑",b.x,b.y+Math.sin(b.t*3)*4,b.r*2.4);
+    ctx.shadowBlur=0;
+    if(b.shieldOn){
+      ctx.strokeStyle="rgba(255,105,180,.7)";ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(b.x,b.y,b.r+12+Math.sin(b.t*5)*3,0,TAU);ctx.stroke();
+    }
+  }
+  if(G.skipBtn){
+    const s=G.skipBtn;
+    drawEm("⏭️",s.x,s.y,34*(1+Math.sin(G.time*8)*0.12));
+  }
+
+  for(const b of G.bullets){
+    ctx.fillStyle="#b9a3ff";
+    ctx.beginPath();ctx.arc(b.x,b.y,4,0,TAU);ctx.fill();
+  }
+  for(const b of G.ebullets)drawEm("🔸",b.x,b.y,12);
+  for(const g of G.gems)drawEm(g.fake?"🟡":"🟦",g.x,g.y,14);
+  for(const f of G.fx){
+    const a=f.life/f.max;
+    if(f.heal){
+      ctx.strokeStyle="rgba(57,217,138,"+a*0.6+")";
+      ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1.2-a*0.4),0,TAU);ctx.stroke();
+    }else{
+      ctx.strokeStyle="rgba(185,163,255,"+a+")";
+      ctx.beginPath();ctx.arc(f.x,f.y,f.r*(2-a),0,TAU);ctx.stroke();
+    }
+  }
+  ctx.textAlign="center";ctx.font="12px monospace";
+  for(const d of G.dmgTexts){
+    ctx.fillStyle="rgba(255,226,104,"+clamp(d.life*2,0,1)+")";
+    ctx.fillText(d.t,d.x,d.y);
+  }
+
+  if(G.flashT>0){ctx.fillStyle="rgba(200,0,40,"+G.flashT*1.2+")";ctx.fillRect(0,0,W,H);}
+  else if(G.invertT>0){
+    ctx.fillStyle="rgba(120,0,30,.10)";ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#ff8fa8";ctx.font="13px monospace";
+    ctx.fillText("👻 操作已反转",W/2,H-70);
+  }
+}
+function renderHud(){
+  if(!G)return;
+  const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
+  $("timeP").textContent=m+":"+(s<10?"0":"")+s;
+  $("killP").textContent=G.kills;
+  $("lvP").textContent=G.player.lv;
+  $("hpP").textContent=G.player.hp;
+  $("xpfill").style.width=(G.player.xp/G.player.xpNeed*100)+"%";
+}
+
+/* ================= 主循环 ================= */
+let last=0;
+function loop(t){
+  const dt=Math.min(0.05,(t-last)/1000);last=t;
+  if(G)update(dt);
+  render();renderHud();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ================= 主页 / 角色选择 / 图鉴 ================= */
+function refreshHome(){
+  const bank=+(localStorage.getItem("darg_frags")||0);
+  const best=+(localStorage.getItem("darg_best")||0);
+  const bm=Math.floor(best/60),bs=best%60;
+  const total=dexOrder().length+1;
+  const got=Object.keys(dexData).filter(k=>dexData[k]>0).length;
+  $("homeStat").innerHTML=
+    "🧩 考古碎片："+bank+"　｜　最长存活："+(best?bm+"分"+bs+"秒":"—")+
+    "<br>📖 图鉴进度："+got+" / "+total;
+}
+function buildCharSel(){
+  const list=$("charList");list.innerHTML="";
+  for(const c of TOOLS.characters){
+    const b=document.createElement("button");
+    b.className="charBtn";
+    b.innerHTML="<span class='em'>"+c.em+"</span><span><span class='nm'>"+c.name+
+      "</span><br><span class='ds'>"+c.desc+"</span></span>";
+    b.onclick=()=>newGame(c.id);
+    list.appendChild(b);
+  }
+}
+function buildDex(){
+  const grid=$("dexGrid");grid.innerHTML="";
+  const items=dexOrder().map(t=>({key:t,d:EDATA.enemies[t]}));
+  items.push({key:"__boss",d:{em:EDATA.boss.em,name:EDATA.boss.name,bio:EDATA.boss.bio}});
+  let got=0;
+  for(const it of items){
+    const n=dexData[it.key]||0;
+    const un=n>0;if(un)got++;
+    const div=document.createElement("div");
+    div.className="dexItem"+(un?"":" locked");
+    div.innerHTML=un
+      ?"<div class='em'>"+it.d.em+"</div><div class='nm'>"+it.d.name+"</div>"
+        +"<div class='bio'>"+(it.d.bio||"")+"</div>"
+        +"<div class='ct'>击杀 ×"+n+"</div>"
+      :"<div class='em'>"+it.d.em+"</div><div class='nm'>？？？</div>"
+        +"<div class='bio'>尚未遭遇。深入服务器挖掘吧。</div>";
+    grid.appendChild(div);
+  }
+  $("dexSub").textContent="已解锁 "+got+" / "+items.length+"　｜　击杀烂点自动解锁对应条目";
+}
+$("btnPlay").onclick=()=>{buildCharSel();$("home").style.display="none";$("charsel").style.display="flex";};
+$("btnCharBack").onclick=()=>{$("charsel").style.display="none";$("home").style.display="flex";};
+$("btnDex").onclick=()=>{buildDex();$("home").style.display="none";$("dex").style.display="flex";};
+$("btnDexBack").onclick=()=>{$("dex").style.display="none";refreshHome();$("home").style.display="flex";};
+$("btnHome1").onclick=goHome;
+$("btnHome2").onclick=goHome;
+refreshHome();
+</script>
+</body>
+</html>
