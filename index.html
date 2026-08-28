@@ -745,6 +745,8 @@ function gameEnd(good){
   if(G.over)return;
   G.over=true;G.running=false;
   recordDex("__boss");
+  const best=+(localStorage.getItem("darg_best")||0);
+  if(G.time>best)localStorage.setItem("darg_best",Math.floor(G.time));
   $("bossBar").style.display="none";
   const {frags,bank}=fragsBank(good?80:30);
   const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
