@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>WIG Survivor</title>
+<title>WIG Survivors</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:"Microsoft YaHei",Consolas,monospace}
@@ -34,6 +34,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:
 #btnPlay{background:#ff69b4;color:#fff}
 #btnDex{background:#2a2440;color:#e8e2ff;border:1px solid #4a3870}
 #home .stat{color:#544c70;font-size:11px;margin-top:24px;line-height:2}
+.disclaimer{color:#3f3a55;font-size:10px;margin-top:18px;line-height:1.8;max-width:320px}
 /* 角色选择 */
 #charsel h1{color:#ffe268;font-size:22px;margin-bottom:4px}
 #charsel .sub{color:#6b638a;font-size:12px;margin-bottom:16px}
@@ -117,11 +118,13 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 </div>
 
 <div class="ov" id="home" style="display:flex">
-  <h1>WIG Survivor</h1>
+  <h1>WIG Survivors</h1>
   <div class="s">摧毁一个不存在的ARG · v0.6 角色版</div>
   <button class="menuBtn" id="btnPlay">▶ 开始游戏</button>
   <button class="menuBtn" id="btnDex">📖 图鉴</button>
   <div class="stat" id="homeStat"></div>
+  <div class="disclaimer">本游戏玩法创意参考自《吸血鬼幸存者》（Vampire Survivors）。<br>
+    粉丝向同人整活作品，无商业用途，版权归原开发者所有。如涉及侵权请联系删除。</div>
 </div>
 
 <div class="ov" id="charsel">
