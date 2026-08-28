@@ -3,7 +3,8 @@ window.ENEMY_DATA = {
   bossTime: 300,          // ★ 5分钟出Boss
   boss: {
     "em":"👑","name":"ARG酱",
-    "hp":300,"dmg":12,"spd":42,"r":30,   // ★ 血量下调适配短局
+    "hp":300,"dmg":12,"spd":42,"r":30,"xp":0,   // ★ 血量下调适配短局
+    "behavior":"chase","behaviorParams":{},
     "bio":"她说她做的东西不是烂，是深度。"
   },
 

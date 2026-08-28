@@ -1094,19 +1094,23 @@ function showDexDetail(key,d){
   let st="",mech="";
   if(un){
     st="❤ 生命 "+d.hp+"　｜　⚡ 伤害 "+d.dmg+"<br>👟 速度 "+d.spd+"　｜　📏 体积 "+d.r+"　｜　⭐ 经验 "+d.xp;
-    mech="<b>行为：</b>"+(BEHAVIOR_DESC[d.behavior]||d.behavior)+fmtParams(d.behavior,d.behaviorParams);
-    if(d.shield)mech+="<br>🛡 护盾："+d.shield.layers+" 层，每层 "+d.shield.hp+" 点";
-    if(d.ghost)mech+="<br>👻 幽灵：半透明，几乎隐形";
-    if(d.aura){
-      const a=d.aura;
-      mech+="<br>"+(a.slow
-        ?"🐌 减速光环（半径 "+a.radius+"，减速 "+Math.round(a.slow*100)+"%）"
-        :"🔄 反转光环（半径 "+a.radius+"，靠近后操作反转）");
-    }
-    if(d.onDeath){
-      const od=d.onDeath;
-      if(od.type==="split")mech+="<br>💥 死亡分裂：生成 "+(enemyDef(od.into)?enemyDef(od.into).name:od.into)+" ×"+od.count+"（血量 ×"+od.hpMult+"）";
-      else if(od.type==="dropFake")mech+="<br>💥 死亡掉落假线索 ×"+od.count;
+    if(key==="__boss"){
+      mech="👑 多阶段Boss：追踪玩家，放射弹幕并召唤烂点。<br>🛡 二阶段展开护盾：拾取 ⏭️ 可解除，获得 6 秒输出窗口。<br>🕊 血量低于 5% 后放下武器——靠近她，达成真结局。";
+    }else{
+      mech="<b>行为：</b>"+(BEHAVIOR_DESC[d.behavior]||d.behavior)+fmtParams(d.behavior,d.behaviorParams);
+      if(d.shield)mech+="<br>🛡 护盾："+d.shield.layers+" 层，每层 "+d.shield.hp+" 点";
+      if(d.ghost)mech+="<br>👻 幽灵：半透明，几乎隐形";
+      if(d.aura){
+        const a=d.aura;
+        mech+="<br>"+(a.slow
+          ?"🐌 减速光环（半径 "+a.radius+"，减速 "+Math.round(a.slow*100)+"%）"
+          :"🔄 反转光环（半径 "+a.radius+"，靠近后操作反转）");
+      }
+      if(d.onDeath){
+        const od=d.onDeath;
+        if(od.type==="split")mech+="<br>💥 死亡分裂：生成 "+(enemyDef(od.into)?enemyDef(od.into).name:od.into)+" ×"+od.count+"（血量 ×"+od.hpMult+"）";
+        else if(od.type==="dropFake")mech+="<br>💥 死亡掉落假线索 ×"+od.count;
+      }
     }
   }
   $("ddStats").innerHTML=st;
@@ -1117,7 +1121,7 @@ function showDexDetail(key,d){
 function buildDex(){
   const grid=$("dexGrid");grid.innerHTML="";
   const items=dexOrder().map(t=>({key:t,d:EDATA.enemies[t]}));
-  items.push({key:"__boss",d:{em:EDATA.boss.em,name:EDATA.boss.name,bio:EDATA.boss.bio}});
+  items.push({key:"__boss",d:{...EDATA.boss}});
   let got=0;
   for(const it of items){
     const n=dexData[it.key]||0;
