@@ -105,7 +105,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 <div id="quote"></div>
 
 <div class="ov" id="lvup">
-  <h2>⬆ 考古工具升级</h2>
+  <h2>⬆ WIG工具升级</h2>
   <div class="sub">选择一项</div>
   <div id="upList"></div>
 </div>
@@ -136,7 +136,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 </div>
 
 <div class="ov" id="charsel">
-  <h1>选择考古者</h1>
+  <h1>选择WIG猎人</h1>
   <div class="sub">每名角色携带不同的初始武器</div>
   <div id="charList"></div>
   <button class="back" id="btnCharBack">← 返回</button>
@@ -162,7 +162,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 </div>
 
 <div class="ov" id="esc">
-  <h1 style="color:#e8e2ff;font-size:24px;margin-bottom:4px">⏸ 考古暂停中</h1>
+  <h1 style="color:#e8e2ff;font-size:24px;margin-bottom:4px">⏸ WIG清理暂停中</h1>
   <div class="sub" style="color:#6b638a;font-size:12px;margin-bottom:12px">WIG Survivors</div>
   <button class="menuBtn" id="btnResume" style="background:#ff69b4;color:#fff">▶ 继续游戏</button>
   <button class="menuBtn" id="btnEscDex" style="background:#2a2440;color:#e8e2ff;border:1px solid #4a3870">📖 图鉴</button>
@@ -738,7 +738,7 @@ function die(){
   const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
   $("deadSt").innerHTML=
     "存活时间：<b>"+m+"分"+s+"秒</b><br>击杀烂点：<b>"+G.kills+"</b><br>等级：<b>"+G.player.lv+"</b><br>"+
-    "考古碎片：<b>+"+frags+"</b>（累计 "+bank+" 🧩）";
+    "WIG碎片：<b>+"+frags+"</b>（累计 "+bank+" 🧩）";
   $("dead").style.display="flex";
 }
 function gameEnd(good){
@@ -765,7 +765,7 @@ function gameEnd(good){
       "<p>「再见了。这次的ARG，不会有下次了。」</p>"+
       "<p style='color:#544c70;font-size:12px'>——她只是想要一个不用打了的结局。下次试试放下武器？</p>";
   }
-  $("endRw").textContent="用时 "+m+"分"+s+"秒 ｜ 击杀 "+G.kills+" ｜ 考古碎片 +"+frags+"（累计 "+bank+" 🧩）";
+  $("endRw").textContent="用时 "+m+"分"+s+"秒 ｜ 击杀 "+G.kills+" ｜ WIG碎片 +"+frags+"（累计 "+bank+" 🧩）";
   $("ending").style.display="flex";
 }
 
@@ -1053,7 +1053,7 @@ function refreshHome(){
   const total=dexOrder().length+1;
   const got=Object.keys(dexData).filter(k=>dexData[k]>0).length;
   $("homeStat").innerHTML=
-    "🧩 考古碎片："+bank+"　｜　最长存活："+(best?bm+"分"+bs+"秒":"—")+
+    "🧩 WIG碎片："+bank+"　｜　最长存活："+(best?bm+"分"+bs+"秒":"—")+
     "<br>📖 图鉴进度："+got+" / "+total;
 }
 function buildCharSel(){

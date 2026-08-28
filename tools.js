@@ -1,13 +1,13 @@
 window.TOOLS_DATA = {
   "characters": [
-    { "id":"lamp", "em":"🌌", "name":"银河电灯",          "weapon":"lens",    "desc":"初始武器：🔎考古镜" },
+    { "id":"lamp", "em":"🌌", "name":"银河电灯",          "weapon":"lens",    "desc":"初始武器：🔎考据镜" },
     { "id":"fish", "em":"🐟", "name":"邮电鱼",            "weapon":"report",  "desc":"初始武器：🗑️举报光环" },
     { "id":"ad",   "em":"📢", "name":"ADsurrrfbOᴗ0ಣrd.",  "weapon":"chain",   "desc":"初始武器：⛓️证据链" },
     { "id":"civ",  "em":"🗡️", "name":"Civyar",            "weapon":"scissors","desc":"初始武器：✂️截图剪刀" }
   ],
   "weapons": [
     {
-      "id":"lens","em":"🔎","name":"考古镜",
+      "id":"lens","em":"🔎","name":"考据镜",
       "desc":"自动锁定最近的目标",
       "type":"projectile",
       "base":{ "cooldown":0.55,"damage":1,"speed":420,"life":1.2,"count":1,"pierce":0 },
@@ -48,10 +48,10 @@ window.TOOLS_DATA = {
     }
   ],
   "passives": [
-    { "id":"dmg","em":"💪","name":"镜片打磨","desc":"所有伤害 +1","perLevel":{"flatDamage":1},"maxLevel":5 },
+    { "id":"dmg","em":"🔨","name":"实锤","desc":"所有伤害 +1","perLevel":{"flatDamage":1},"maxLevel":5 },
     { "id":"rate","em":"⏱️","name":"手速训练","desc":"攻击间隔 -15%","perLevel":{"cooldownMult":0.85},"maxLevel":5 },
-    { "id":"multi","em":"🧵","name":"多线程考古","desc":"同时锁定 +1 个目标","perLevel":{"count":1},"maxLevel":2 },
-    { "id":"spd","em":"👟","name":"考古学家的执念","desc":"移动速度 +12%","perLevel":{"moveMult":0.12},"maxLevel":3 },
+    { "id":"multi","em":"🧵","name":"多线程考据","desc":"同时锁定 +1 个目标","perLevel":{"count":1},"maxLevel":2 },
+    { "id":"spd","em":"👟","name":"考据狂的执念","desc":"移动速度 +12%","perLevel":{"moveMult":0.12},"maxLevel":3 },
     { "id":"hp","em":"🍪","name":"玩家反馈","desc":"生命上限 +20 并回满","perLevel":{"maxhp":20},"maxLevel":3 },
     { "id":"magnet","em":"🧲","name":"证据吸引","desc":"拾取范围 +40%","perLevel":{"magnetMult":0.4},"maxLevel":3 },
     { "id":"xp","em":"⭐","name":"社区声望","desc":"获得经验 +15%","perLevel":{"xpMult":0.15},"maxLevel":3 },
