@@ -141,6 +141,14 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
   <button class="back" id="btnDexBack">← 返回</button>
 </div>
 
+<div class="ov" id="esc">
+  <h1 style="color:#e8e2ff;font-size:24px;margin-bottom:4px">⏸ 考古暂停中</h1>
+  <div class="sub" style="color:#6b638a;font-size:12px;margin-bottom:12px">WIG Survivors</div>
+  <button class="menuBtn" id="btnResume" style="background:#ff69b4;color:#fff">▶ 继续游戏</button>
+  <button class="menuBtn" id="btnEscDex" style="background:#2a2440;color:#e8e2ff;border:1px solid #4a3870">📖 图鉴</button>
+  <button class="menuBtn" id="btnEscHome" style="background:#2a2440;color:#e8e2ff;border:1px solid #4a3870">🏠 返回首页</button>
+</div>
+
 <div class="ov" id="err">
   <h1 style="color:#ff4f7b;font-size:22px;margin-bottom:12px">⚙️ 数据校验失败</h1>
   <div id="errbox"></div>
@@ -150,6 +158,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 <script src="tools.js"></script>
 <script>
 "use strict";
+console.log("恭喜你发现了隐藏彩蛋！这是终极密码：NjIzNzY4MTU3");
 const $=id=>document.getElementById(id);
 const cv=$("cv"),ctx=cv.getContext("2d");
 let W=0,H=0;
@@ -425,14 +434,14 @@ function newGame(charId){
            magnetMult:0,xpMult:1,armor:0},   /* ★ magnetMult从0起，加法 */
     boss:null,bossDone:false,skipBtn:null,
     quoteT:6,invertT:0,flashT:0,flashCd:8,
-    pendingLv:0
+    pendingLv:0,escOpen:false
   };
 }
 function goHome(){
   G=null;
   $("bossBar").style.display="none";
   $("quote").style.opacity=0;
-  ["hud","dead","ending","lvup","charsel","dex"].forEach(id=>$(id).style.display="none");
+  ["hud","dead","ending","lvup","charsel","dex","esc"].forEach(id=>$(id).style.display="none");
   refreshHome();
   $("home").style.display="flex";
 }
@@ -440,7 +449,16 @@ const weaponDef=id=>TOOLS.weapons.find(w=>w.id===id);
 const enemyDef=id=>EDATA.enemies[id];
 
 /* ================= 输入 ================= */
-addEventListener("keydown",e=>{if(G)G.keys[e.key.toLowerCase()]=true;});
+addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    if(G&&G.escOpen){
+      if($("dex").style.display==="flex"){$("dex").style.display="none";$("esc").style.display="flex";}
+      else closeEsc();
+    }else openEsc();
+    return;
+  }
+  if(G)G.keys[e.key.toLowerCase()]=true;
+});
 addEventListener("keyup",e=>{if(G)G.keys[e.key.toLowerCase()]=false;});
 cv.addEventListener("touchstart",e=>{e.preventDefault();
   const t=e.touches[0];if(G)G.joy={ox:t.clientX,oy:t.clientY,x:t.clientX,y:t.clientY};},{passive:false});
@@ -1052,9 +1070,27 @@ function buildDex(){
 $("btnPlay").onclick=()=>{buildCharSel();$("home").style.display="none";$("charsel").style.display="flex";};
 $("btnCharBack").onclick=()=>{$("charsel").style.display="none";$("home").style.display="flex";};
 $("btnDex").onclick=()=>{buildDex();$("home").style.display="none";$("dex").style.display="flex";};
-$("btnDexBack").onclick=()=>{$("dex").style.display="none";refreshHome();$("home").style.display="flex";};
+$("btnDexBack").onclick=()=>{
+  $("dex").style.display="none";
+  if(G&&G.escOpen)$("esc").style.display="flex";
+  else{refreshHome();$("home").style.display="flex";}
+};
 $("btnHome1").onclick=goHome;
 $("btnHome2").onclick=goHome;
+/* ESC 暂停菜单 */
+function openEsc(){
+  if(!G||G.over||G.escOpen||$("lvup").style.display==="flex")return;
+  G.escOpen=true;G.paused=true;
+  $("esc").style.display="flex";
+}
+function closeEsc(){
+  if(!G||!G.escOpen)return;
+  G.escOpen=false;G.paused=false;
+  $("esc").style.display="none";
+}
+$("btnResume").onclick=closeEsc;
+$("btnEscDex").onclick=()=>{$("esc").style.display="none";buildDex();$("dex").style.display="flex";};
+$("btnEscHome").onclick=goHome;
 refreshHome();
 </script>
 </body>
