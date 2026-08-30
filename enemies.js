@@ -78,7 +78,7 @@ window.ENEMY_DATA = {
     "table": {
       "em":"🧮","name":"乱码表格",
       "hp":3,"spd":20,"dmg":6,"r":16,"xp":2,
-      "behavior":"shooter","behaviorParams":{"range":250,"fireEvery":1.7,"bulletSpd":150,"bulletDmg":6},
+      "behavior":"shooter","behaviorParams":{"range":250,"fireEvery":1.7,"bulletSpd":150,"bulletDmg":3},
       "onDeath":null,
       "bio":"jfkdlajfkldsjfklsd——它保持距离，朝你吐乱码。"
     },

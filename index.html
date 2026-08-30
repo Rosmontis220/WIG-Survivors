@@ -613,11 +613,11 @@ function updateBoss(dt){
 
   b.fireT-=dt;
   if(b.fireT<=0){
-    if(b.phase===1){bossRadial(14,130,b.dmg*0.6);b.fireT=2.4;}
-    else if(b.phase===2){if(!b.shieldOn)bossRadial(10,110,b.dmg*0.6);b.fireT=3.5;}
+    if(b.phase===1){bossRadial(14,130,3);b.fireT=2.4;}
+    else if(b.phase===2){if(!b.shieldOn)bossRadial(10,110,3);b.fireT=3.5;}
     else{
       const a=Math.atan2(pl.y-b.y,pl.x-b.x);
-      G.ebullets.push({x:b.x,y:b.y,vx:Math.cos(a)*110,vy:Math.sin(a)*110,life:6,dmg:b.dmg*0.5});
+      G.ebullets.push({x:b.x,y:b.y,vx:Math.cos(a)*110,vy:Math.sin(a)*110,life:6,dmg:3});
       b.fireT=2.8;
     }
   }
@@ -845,7 +845,7 @@ function update(dt){
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
     if(b.life<=0){b.dead=true;continue;}
     const dx=p.x-b.x,dy=p.y-b.y;
-    if(dx*dx+dy*dy<(p.r+4)*(p.r+4)){b.dead=true;hurtPlayer(b.dmg);}
+    if(dx*dx+dy*dy<(p.r+7)*(p.r+7)){b.dead=true;hurtPlayer(b.dmg);}
   }
   G.ebullets=G.ebullets.filter(b=>!b.dead);
 
@@ -1002,7 +1002,7 @@ function render(){
     ctx.fillStyle="#b9a3ff";
     ctx.beginPath();ctx.arc(b.x,b.y,4,0,TAU);ctx.fill();
   }
-  for(const b of G.ebullets)drawEm("🔸",b.x,b.y,12);
+  for(const b of G.ebullets)drawEm("🔸",b.x,b.y,20);
   for(const g of G.gems)drawEm(g.fake?"🟡":"🟦",g.x,g.y,14);
   for(const f of G.fx){
     const a=f.life/f.max;
