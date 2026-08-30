@@ -411,7 +411,7 @@ const PASSIVE_KEYS={
   cooldownMult:(G,v)=>G.pstat.cooldownMult*=v,
   count:(G,v)=>G.pstat.count+=v,
   moveMult:(G,v)=>G.pstat.moveMult+=v,
-  maxhp:(G,v)=>{G.player.maxhp+=v;G.player.hp=Math.min(G.player.maxhp,G.player.hp+v);},
+  maxhp:(G,v)=>{G.player.maxhp+=v;G.player.hp=G.player.maxhp;},
   magnetMult:(G,v)=>G.pstat.magnetMult+=v,   /* ★ 修复：加法累加，不再是乘法 */
   xpMult:(G,v)=>G.pstat.xpMult+=v,
   armor:(G,v)=>G.pstat.armor+=v
