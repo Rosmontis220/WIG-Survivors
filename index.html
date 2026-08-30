@@ -35,6 +35,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:
 #btnDex{background:#2a2440;color:#e8e2ff;border:1px solid #4a3870}
 #home .stat{color:#544c70;font-size:11px;margin-top:24px;line-height:2}
 .disclaimer{color:#3f3a55;font-size:10px;margin-top:18px;line-height:1.8;max-width:320px}
+#ctLine{color:#544c70;font-size:11px;margin-top:8px}
+#ctLine.ready{color:#b9a3ff}
+#contract .sub{color:#6b638a;font-size:12px;margin-bottom:12px}
+#contract .ctEmpty{color:#8a80a8;font-size:13px;padding:30px 0}
+#contract .ctBank{color:#b9a3ff;font-size:12px;margin-top:14px}
+#contract .ctCard{display:flex;gap:12px;text-align:left;background:#120e1e;border:1px solid #4a5f8a;border-radius:8px;padding:12px 14px;margin-top:8px;width:min(420px,92vw)}
+#contract .ctEm{font-size:28px}
+#contract .ctName{color:#ffd76a;font-size:14px;font-weight:bold}
+#contract .ctDesc{color:#9a92b8;font-size:12px;line-height:1.6;margin-top:3px}
+#contract .ctTags{color:#7a7296;font-size:10px;margin-top:4px}
+#contract .back{margin-top:18px;padding:10px 34px;background:#2a2440;color:#e8e2ff;
+  border:1px solid #4a3870;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
 /* 角色选择 */
 #charsel h1{color:#ffe268;font-size:22px;margin-bottom:4px}
 #charsel .sub{color:#6b638a;font-size:12px;margin-bottom:16px}
@@ -129,6 +141,8 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
   <h1>WIG Survivors</h1>
   <div class="s">摧毁一个不存在的ARG · v0.6 角色版</div>
   <button class="menuBtn" id="btnPlay">▶ 开始游戏</button>
+  <button class="menuBtn" id="btnContract" style="background:#1c2540;color:#ffd76a;border:1px solid #4a5f8a">⚔️ 危机合约</button>
+  <div class="ctStatus" id="ctLine">🔒 通关普通模式后解锁</div>
   <button class="menuBtn" id="btnDex">📖 图鉴</button>
   <div class="stat" id="homeStat"></div>
   <div class="disclaimer">本游戏玩法创意参考自《吸血鬼幸存者》（Vampire Survivors）。<br>
@@ -161,6 +175,14 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
   </div>
 </div>
 
+<div class="ov" id="contract">
+  <h1 style="color:#ffd76a;font-size:24px;margin-bottom:4px">⚔️ 危机合约</h1>
+  <div class="sub">通关普通模式后开放 · 每次进入消耗 50 🧩</div>
+  <div id="ctList"></div>
+  <div class="ctBank" id="ctBank"></div>
+  <button class="back" id="btnCtBack">← 返回</button>
+</div>
+
 <div class="ov" id="esc">
   <h1 style="color:#e8e2ff;font-size:24px;margin-bottom:4px">⏸ WIG清理暂停中</h1>
   <div class="sub" style="color:#6b638a;font-size:12px;margin-bottom:12px">WIG Survivors</div>
@@ -176,6 +198,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 
 <script src="enemies.js"></script>
 <script src="tools.js"></script>
+<script src="contracts.js"></script>
 <script>
 "use strict";
 console.log("恭喜你发现了隐藏彩蛋！这是终极密码：NjIzNzY4MTU3");
@@ -370,8 +393,9 @@ const PASSIVE_KEYS={
 /* ================= 数据校验 ================= */
 const EDATA=window.ENEMY_DATA,TOOLS=window.TOOLS_DATA;
 const PROBLEMS=[];
-if(!EDATA||!TOOLS){
-  $("errbox").textContent="找不到 enemies.js 或 tools.js。\n请确认文件名与HTML同目录、UTF-8编码。";
+const CDATA=window.CONTRACT_DATA;
+if(!EDATA||!TOOLS||!CDATA){
+  $("errbox").textContent="找不到 enemies.js / tools.js / contracts.js。\n请确认文件名与HTML同目录、UTF-8编码。";
   $("err").style.display="flex";
   throw new Error("数据文件缺失");
 }
@@ -398,6 +422,8 @@ if(!EDATA||!TOOLS){
   for(const c of TOOLS.characters||[])
     if(!TOOLS.weapons.find(w=>w.id===c.weapon))
       PROBLEMS.push('角色 "'+c.id+'" 的初始武器 "'+c.weapon+'" 不存在');
+  if(typeof CDATA.cost!=="number")PROBLEMS.push("危机合约缺少 cost 字段");
+  if(!Array.isArray(CDATA.contracts))PROBLEMS.push("危机合约缺少 contracts 数组");
 })();
 if(PROBLEMS.length){
   $("errbox").textContent=PROBLEMS.join("\n");
@@ -461,7 +487,7 @@ function goHome(){
   G=null;
   $("bossBar").style.display="none";
   $("quote").style.opacity=0;
-  ["hud","dead","ending","lvup","charsel","dex","esc"].forEach(id=>$(id).style.display="none");
+  ["hud","dead","ending","lvup","charsel","dex","esc","contract"].forEach(id=>$(id).style.display="none");
   refreshHome();
   $("home").style.display="flex";
 }
@@ -745,6 +771,7 @@ function gameEnd(good){
   if(G.over)return;
   G.over=true;G.running=false;
   recordDex("__boss");
+  localStorage.setItem(CDATA.unlockKey,"1"); // 通关普通模式，解锁危机合约
   const best=+(localStorage.getItem("darg_best")||0);
   if(G.time>best)localStorage.setItem("darg_best",Math.floor(G.time));
   $("bossBar").style.display="none";
@@ -1054,6 +1081,10 @@ function refreshHome(){
   const bm=Math.floor(best/60),bs=best%60;
   const total=dexOrder().length+1;
   const got=Object.keys(dexData).filter(k=>dexData[k]>0).length;
+  const cleared=localStorage.getItem(CDATA.unlockKey)==="1";
+  const cl=$("ctLine");
+  if(cleared){cl.textContent="已解锁 · "+CDATA.cost+" 🧩/次　｜　当前 "+bank+" 🧩";cl.className="ctStatus ready";}
+  else{cl.textContent="🔒 通关普通模式后解锁";cl.className="ctStatus";}
   $("homeStat").innerHTML=
     "🧩 WIG碎片："+bank+"　｜　最长存活："+(best?bm+"分"+bs+"秒":"—")+
     "<br>📖 图鉴进度："+got+" / "+total;
@@ -1145,6 +1176,31 @@ function buildDex(){
 $("btnPlay").onclick=()=>{buildCharSel();$("home").style.display="none";$("charsel").style.display="flex";};
 $("btnCharBack").onclick=()=>{$("charsel").style.display="none";$("home").style.display="flex";};
 $("btnDex").onclick=()=>{buildDex();$("home").style.display="none";$("dex").style.display="flex";};
+$("btnContract").onclick=()=>{
+  if(localStorage.getItem(CDATA.unlockKey)!=="1"){say("🔒 通关普通模式后解锁",2500);return;}
+  const bank=+(localStorage.getItem("darg_frags")||0);
+  if(bank<CDATA.cost){say("🧩 碎片不足：需 "+CDATA.cost+"，当前 "+bank,2500);return;}
+  renderContract();
+  $("home").style.display="none";
+  $("contract").style.display="flex";
+};
+function renderContract(){
+  const list=CDATA.contracts||[];
+  const box=$("ctList");box.innerHTML="";
+  if(!list.length){
+    box.innerHTML="<div class='ctEmpty'>📝 词条准备中，敬请期待…</div>";
+  }else{
+    list.forEach(c=>{
+      const d=document.createElement("div");
+      d.className="ctCard";
+      d.innerHTML="<div class='ctEm'>"+c.em+"</div><div><div class='ctName'>"+c.name+"</div>"+
+        "<div class='ctDesc'>"+c.desc+"</div>"+(c.tags?"<div class='ctTags'>"+c.tags.map(t=>"#"+t).join(" ")+"</div>":"")+"</div>";
+      box.appendChild(d);
+    });
+  }
+  $("ctBank").textContent="当前碎片："+(+(localStorage.getItem("darg_frags")||0))+" 🧩　｜　进入消耗 "+CDATA.cost+" 🧩";
+}
+$("btnCtBack").onclick=()=>{$("contract").style.display="none";refreshHome();$("home").style.display="flex";};
 $("btnDexBack").onclick=()=>{
   $("dex").style.display="none";
   if(G&&G.escOpen)$("esc").style.display="flex";
