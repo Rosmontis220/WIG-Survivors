@@ -816,6 +816,8 @@ function fragsBank(extra){
 function die(){
   if(G.over)return;
   G.over=true;G.running=false;
+  const origScore=G.ctScore||0;
+  G.ctScore=0; // 失败不结算，总分归零
   const {frags,bank}=fragsBank();
   const best=+(localStorage.getItem("darg_best")||0);
   if(G.time>best)localStorage.setItem("darg_best",Math.floor(G.time));
@@ -823,8 +825,19 @@ function die(){
   $("deadSt").innerHTML=
     "存活时间：<b>"+m+"分"+s+"秒</b><br>击杀烂点：<b>"+G.kills+"</b><br>等级：<b>"+G.player.lv+"</b><br>"+
     "WIG碎片：<b>+"+frags+"</b>（累计 "+bank+" 🧩）"+
-    (G.ctScore?"<br>本次合约总分：<b>+"+G.ctScore+"</b>":"");
+    (origScore>0?"<br>本次合约总分：<b id='ctDeadScore'>+"+origScore+"</b>":"");
   $("dead").style.display="flex";
+  if(origScore>0){
+    /* 分数倒数动画：从原值归零 */
+    const el=$("ctDeadScore"),dur=1500,t0=performance.now();
+    (function step(t){
+      const k=Math.min(1,(t-t0)/dur);
+      const v=Math.max(0,Math.round(origScore*(1-k)));
+      el.textContent="+"+v;
+      if(k<1)requestAnimationFrame(step);
+      else el.textContent="+0（失败不结算）";
+    })(t0);
+  }
 }
 function gameEnd(good){
   if(G.over)return;
