@@ -37,16 +37,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:
 .disclaimer{color:#3f3a55;font-size:10px;margin-top:18px;line-height:1.8;max-width:320px}
 #ctLine{color:#544c70;font-size:11px;margin-top:8px}
 #ctLine.ready{color:#b9a3ff}
-#contract .sub{color:#6b638a;font-size:12px;margin-bottom:12px}
+#contract .sub{color:#6b638a;font-size:12px;margin-bottom:10px}
 #contract .ctEmpty{color:#8a80a8;font-size:13px;padding:30px 0}
-#contract .ctBank{color:#b9a3ff;font-size:12px;margin-top:14px}
-#contract .ctCard{display:flex;gap:12px;text-align:left;background:#120e1e;border:1px solid #4a5f8a;border-radius:8px;padding:12px 14px;margin-top:8px;width:min(420px,92vw)}
-#contract .ctEm{font-size:28px}
-#contract .ctName{color:#ffd76a;font-size:14px;font-weight:bold}
-#contract .ctDesc{color:#9a92b8;font-size:12px;line-height:1.6;margin-top:3px}
-#contract .ctTags{color:#7a7296;font-size:10px;margin-top:4px}
-#contract .back{margin-top:18px;padding:10px 34px;background:#2a2440;color:#e8e2ff;
+#ctZones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:min(900px,94vw);align-items:start}
+.ctZone{background:#0e0a18;border:1px solid #2a2440;border-radius:10px;padding:10px;min-width:0}
+.ctZone .zh{color:#ffd76a;font-size:13px;font-weight:bold;margin-bottom:4px;text-align:center}
+.ctZone .zh small{color:#7a7296;font-weight:normal;font-size:10px}
+.ctZone .zc{display:grid;grid-template-columns:1fr;gap:6px}
+.ctCard{display:flex;gap:8px;align-items:flex-start;text-align:left;background:#120e1e;border:1px solid #3a2f60;border-radius:8px;padding:8px 10px;cursor:pointer;transition:.12s}
+.ctCard:hover{border-color:#b9a3ff}
+.ctCard.sel{border-color:#ffd76a;background:#1c2130;box-shadow:0 0 8px #ffd76a44}
+.ctCard .ctEm{font-size:22px}
+.ctCard .ctName{color:#e8e2ff;font-size:12px;font-weight:bold}
+.ctCard .ctDesc{color:#8a80a8;font-size:11px;line-height:1.5;margin-top:2px}
+.ctCard .ctTags{color:#5f5875;font-size:9px;margin-top:2px}
+.ctFoot{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px;flex-wrap:wrap}
+#ctSel{color:#b9a3ff;font-size:12px}
+#ctBank{color:#b9a3ff;font-size:12px}
+#contract .back{margin-top:14px;padding:9px 30px;background:#2a2440;color:#e8e2ff;
   border:1px solid #4a3870;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
+@media(max-width:760px){
+  #ctZones{grid-template-columns:1fr}
+  .ctZone .zc{grid-template-columns:1fr 1fr}
+}
 /* 角色选择 */
 #charsel h1{color:#ffe268;font-size:22px;margin-bottom:4px}
 #charsel .sub{color:#6b638a;font-size:12px;margin-bottom:16px}
@@ -176,10 +189,14 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 </div>
 
 <div class="ov" id="contract">
-  <h1 style="color:#ffd76a;font-size:24px;margin-bottom:4px">⚔️ 危机合约</h1>
+  <h1 style="color:#ffd76a;font-size:22px;margin-bottom:2px">⚔️ 危机合约</h1>
   <div class="sub">通关普通模式后开放 · 每次进入消耗 50 🧩</div>
-  <div id="ctList"></div>
-  <div class="ctBank" id="ctBank"></div>
+  <div id="ctZones"></div>
+  <div class="ctFoot">
+    <span id="ctSel">已选 0 / 3</span>
+    <span id="ctBank"></span>
+    <button class="go" id="btnCtStart">开始合约</button>
+  </div>
   <button class="back" id="btnCtBack">← 返回</button>
 </div>
 
@@ -1180,26 +1197,53 @@ $("btnContract").onclick=()=>{
   if(localStorage.getItem(CDATA.unlockKey)!=="1"){say("🔒 通关普通模式后解锁",2500);return;}
   const bank=+(localStorage.getItem("darg_frags")||0);
   if(bank<CDATA.cost){say("🧩 碎片不足：需 "+CDATA.cost+"，当前 "+bank,2500);return;}
+  ctSel=new Set();
   renderContract();
   $("home").style.display="none";
   $("contract").style.display="flex";
 };
+let ctSel=new Set();
 function renderContract(){
   const list=CDATA.contracts||[];
-  const box=$("ctList");box.innerHTML="";
+  const wrap=$("ctZones");wrap.innerHTML="";
   if(!list.length){
-    box.innerHTML="<div class='ctEmpty'>📝 词条准备中，敬请期待…</div>";
+    wrap.innerHTML="<div class='ctEmpty'>📝 词条准备中，敬请期待…</div>";
   }else{
-    list.forEach(c=>{
-      const d=document.createElement("div");
-      d.className="ctCard";
-      d.innerHTML="<div class='ctEm'>"+c.em+"</div><div><div class='ctName'>"+c.name+"</div>"+
-        "<div class='ctDesc'>"+c.desc+"</div>"+(c.tags?"<div class='ctTags'>"+c.tags.map(t=>"#"+t).join(" ")+"</div>":"")+"</div>";
-      box.appendChild(d);
+    const zones=[
+      {key:"敌人",title:"⚔️ 强化烂点"},
+      {key:"玩家",title:"🩹 弱化玩家"},
+      {key:"Boss",title:"👑 Boss"}
+    ];
+    zones.forEach(z=>{
+      const items=list.filter(c=>(c.tags||[]).includes(z.key));
+      const zone=document.createElement("div");zone.className="ctZone";
+      zone.innerHTML="<div class='zh'>"+z.title+" <small>"+items.length+"</small></div><div class='zc'></div>";
+      const zc=zone.querySelector(".zc");
+      items.forEach(c=>{
+        const d=document.createElement("div");
+        d.className="ctCard"+(ctSel.has(c.id)?" sel":"");
+        d.innerHTML="<div class='ctEm'>"+c.em+"</div><div><div class='ctName'>"+c.name+"</div>"+
+          "<div class='ctDesc'>"+c.desc+"</div>"+(c.tags?"<div class='ctTags'>"+c.tags.map(t=>"#"+t).join(" ")+"</div>":"")+"</div>";
+        d.onclick=()=>{
+          if(ctSel.has(c.id))ctSel.delete(c.id);
+          else{
+            if(ctSel.size>=CDATA.maxContracts){say("最多选择 "+CDATA.maxContracts+" 个词条",1800);return;}
+            ctSel.add(c.id);
+          }
+          renderContract();
+        };
+        zc.appendChild(d);
+      });
+      wrap.appendChild(zone);
     });
   }
-  $("ctBank").textContent="当前碎片："+(+(localStorage.getItem("darg_frags")||0))+" 🧩　｜　进入消耗 "+CDATA.cost+" 🧩";
+  $("ctSel").textContent="已选 "+ctSel.size+" / "+CDATA.maxContracts;
+  $("ctBank").textContent="当前碎片："+(+(localStorage.getItem("darg_frags")||0))+" 🧩　｜　消耗 "+CDATA.cost+" 🧩";
 }
+$("btnCtStart").onclick=()=>{
+  if(!ctSel.size){say("先选择至少 1 个词条",1800);return;}
+  say("合约流程准备中，敬请期待（已选 "+ctSel.size+" 个词条）",2500);
+};
 $("btnCtBack").onclick=()=>{$("contract").style.display="none";refreshHome();$("home").style.display="flex";};
 $("btnDexBack").onclick=()=>{
   $("dex").style.display="none";
