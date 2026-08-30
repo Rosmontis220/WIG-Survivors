@@ -170,7 +170,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
 
 <div class="ov" id="charsel">
   <h1>选择WIG猎人</h1>
-  <div class="sub">每名角色携带不同的初始武器</div>
+  <div class="sub" id="charSub">每名角色携带不同的初始武器</div>
   <div id="charList"></div>
   <button class="back" id="btnCharBack">← 返回</button>
 </div>
@@ -536,6 +536,7 @@ function newGame(charId,ctSelArr){
 }
 function goHome(){
   G=null;
+  ctPending=null;
   $("bossBar").style.display="none";
   $("quote").style.opacity=0;
   ["hud","dead","ending","lvup","charsel","dex","esc","contract"].forEach(id=>$(id).style.display="none");
@@ -1156,7 +1157,13 @@ function buildCharSel(){
     b.className="charBtn";
     b.innerHTML="<span class='em'>"+c.em+"</span><span><span class='nm'>"+c.name+
       "</span><br><span class='ds'>"+c.desc+"</span></span>";
-    b.onclick=()=>newGame(c.id);
+    b.onclick=()=>{
+      if(ctPending){
+        localStorage.setItem("darg_frags",String((+(localStorage.getItem("darg_frags")||0))-CDATA.cost));
+        const s=ctPending;ctPending=null;
+        newGame(c.id,s);
+      }else newGame(c.id);
+    };
     list.appendChild(b);
   }
 }
@@ -1233,8 +1240,12 @@ function buildDex(){
   }
   $("dexSub").textContent="已解锁 "+got+" / "+items.length+"　｜　击杀烂点自动解锁对应条目";
 }
-$("btnPlay").onclick=()=>{buildCharSel();$("home").style.display="none";$("charsel").style.display="flex";};
-$("btnCharBack").onclick=()=>{$("charsel").style.display="none";$("home").style.display="flex";};
+$("btnPlay").onclick=()=>{$("charSub").textContent="每名角色携带不同的初始武器";buildCharSel();$("home").style.display="none";$("charsel").style.display="flex";};
+$("btnCharBack").onclick=()=>{
+  $("charsel").style.display="none";
+  if(ctPending){ctPending=null;$("contract").style.display="flex";renderContract();}
+  else{$("charSub").textContent="每名角色携带不同的初始武器";$("home").style.display="flex";}
+};
 $("btnDex").onclick=()=>{buildDex();$("home").style.display="none";$("dex").style.display="flex";};
 $("btnContract").onclick=()=>{
   if(localStorage.getItem(CDATA.unlockKey)!=="1"){say("🔒 通关普通模式后解锁",2500);return;}
@@ -1246,6 +1257,7 @@ $("btnContract").onclick=()=>{
   $("contract").style.display="flex";
 };
 let ctSel={};
+let ctPending=null;
 const CT_LV=["Ⅰ","Ⅱ","Ⅲ"];
 function renderContract(){
   const list=CDATA.contracts||[];
@@ -1299,11 +1311,12 @@ $("btnCtStart").onclick=()=>{
   if(!Object.keys(ctSel).length){say("先选择至少 1 个词条",1800);return;}
   const bank=+(localStorage.getItem("darg_frags")||0);
   if(bank<CDATA.cost){say("🧩 碎片不足：需 "+CDATA.cost,1800);return;}
-  localStorage.setItem("darg_frags",String(bank-CDATA.cost));
-  const sel=[];
-  for(const id in ctSel)sel.push({id:id,tier:ctSel[id]});
+  ctPending=[];
+  for(const id in ctSel)ctPending.push({id:id,tier:ctSel[id]});
+  $("charSub").textContent="危机合约 · 选择你的角色";
+  buildCharSel();
   $("contract").style.display="none";
-  newGame("lamp",sel);
+  $("charsel").style.display="flex";
 };
 $("btnCtBack").onclick=()=>{$("contract").style.display="none";refreshHome();$("home").style.display="flex";};
 $("btnDexBack").onclick=()=>{
