@@ -39,20 +39,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:
 #ctLine.ready{color:#b9a3ff}
 #contract .sub{color:#6b638a;font-size:12px;margin-bottom:10px}
 #contract .ctEmpty{color:#8a80a8;font-size:13px;padding:30px 0}
-#ctZones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:min(920px,96vw);align-items:start}
+#ctZones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:min(920px,96vw);align-items:start}
 .ctZone{background:#0e0a18;border:1px solid #2a2440;border-radius:10px;padding:10px;min-width:0}
 .ctZone .zh{color:#ffd76a;font-size:13px;font-weight:bold;margin-bottom:4px;text-align:center}
 .ctZone .zh small{color:#7a7296;font-weight:normal;font-size:10px}
 .ctZone .zc{display:grid;grid-template-columns:1fr;gap:6px;max-height:calc(100vh - 250px);overflow-y:auto;padding-right:3px}
-.ctCard{position:relative;display:flex;gap:8px;align-items:flex-start;text-align:left;background:#120e1e;border:1px solid #3a2f60;border-radius:8px;padding:8px 10px;cursor:pointer;transition:.12s}
-.ctCard:hover{border-color:#b9a3ff}
+.ctCard{display:block;text-align:left;background:#120e1e;border:1px solid #3a2f60;border-radius:8px;padding:8px 10px;transition:.12s}
 .ctCard.sel{border-color:#ffd76a;background:#1c2130;box-shadow:0 0 8px #ffd76a44}
-.ctCard .lv{color:#ffd76a;font-size:9px;font-weight:bold;margin-left:4px}
-.ctCard .sc{position:absolute;top:6px;right:8px;color:#39d98a;font-size:10px;font-weight:bold}
-.ctCard .ctEm{font-size:22px}
+.ctCard .ctHead{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.ctCard .ctEm{font-size:20px}
 .ctCard .ctName{color:#e8e2ff;font-size:12px;font-weight:bold}
-.ctCard .ctDesc{color:#8a80a8;font-size:11px;line-height:1.5;margin-top:2px;padding-right:20px}
-.ctCard .ctTags{color:#5f5875;font-size:9px;margin-top:2px}
+.ctCard .ctTags{color:#5f5875;font-size:9px;margin-left:auto}
+.ctCard .ctTiers{display:flex;gap:5px;flex-wrap:wrap}
+.ctCard .tier{flex:1;min-width:0;background:#0e0a18;border:1px solid #3a2f60;border-radius:6px;color:#9a92b8;font-family:inherit;font-size:10px;padding:5px 2px;cursor:pointer;text-align:center;transition:.12s}
+.ctCard .tier:hover{border-color:#b9a3ff;color:#e8e2ff}
+.ctCard .tier.sel{border-color:#ffd76a;background:#ffd76a22;color:#ffd76a;font-weight:bold}
+.ctCard .ctDesc{color:#8a80a8;font-size:10px;line-height:1.5;margin-top:6px}
 .ctFoot{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px;flex-wrap:wrap}
 #ctSel{color:#b9a3ff;font-size:12px}
 #ctBank{color:#b9a3ff;font-size:12px}
@@ -197,7 +199,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
   <div class="sub">通关普通模式后开放 · 每次进入消耗 50 🧩</div>
   <div id="ctZones"></div>
   <div class="ctFoot">
-    <span id="ctSel">已选 0 / 3</span>
+    <span id="ctSel">已选 0 个词条</span>
     <span id="ctScore">合约总分 0</span>
     <span id="ctBank"></span>
     <button class="go" id="btnCtStart">开始合约</button>
@@ -1238,12 +1240,12 @@ $("btnContract").onclick=()=>{
   if(localStorage.getItem(CDATA.unlockKey)!=="1"){say("🔒 通关普通模式后解锁",2500);return;}
   const bank=+(localStorage.getItem("darg_frags")||0);
   if(bank<CDATA.cost){say("🧩 碎片不足：需 "+CDATA.cost+"，当前 "+bank,2500);return;}
-  ctSel=new Set();
+  ctSel={};
   renderContract();
   $("home").style.display="none";
   $("contract").style.display="flex";
 };
-let ctSel=new Set();
+let ctSel={};
 const CT_LV=["Ⅰ","Ⅱ","Ⅲ"];
 function renderContract(){
   const list=CDATA.contracts||[];
@@ -1254,7 +1256,6 @@ function renderContract(){
     const zones=[
       {key:"敌人",title:"⚔️ 强化烂点"},
       {key:"玩家",title:"🩹 弱化玩家"},
-      {key:"Boss",title:"👑 Boss"},
       {key:"特殊",title:"⚙️ 特殊机制"}
     ];
     zones.forEach(z=>{
@@ -1263,46 +1264,44 @@ function renderContract(){
       zone.innerHTML="<div class='zh'>"+z.title+" <small>"+items.length+"</small></div><div class='zc'></div>";
       const zc=zone.querySelector(".zc");
       items.forEach(c=>{
-        c.tiers.forEach((t,tidx)=>{
-          const key=c.id+"#"+tidx;
-          const d=document.createElement("div");
-          d.className="ctCard"+(ctSel.has(key)?" sel":"");
-          const multi=c.tiers.length>1;
-          d.innerHTML="<div class='ctEm'>"+c.em+"</div><div><div class='ctName'>"+c.name+
-            (multi?"<span class='lv'>Lv."+CT_LV[tidx]+"</span>":"")+"</div>"+
-            "<div class='ctDesc'>"+t.desc+"</div><div class='sc'>+"+t.score+"</div>"+
-            (c.tags?"<div class='ctTags'>"+c.tags.map(x=>"#"+x).join(" ")+"</div>":"")+"</div>";
-          d.onclick=()=>{
-            if(ctSel.has(key))ctSel.delete(key);
-            else{
-              if(ctSel.size>=CDATA.maxContracts){say("最多选择 "+CDATA.maxContracts+" 个词条",1800);return;}
-              ctSel.add(key);
-            }
+        const selTier=ctSel[c.id];
+        const card=document.createElement("div");
+        card.className="ctCard"+(selTier!==undefined?" sel":"");
+        card.innerHTML="<div class='ctHead'><span class='ctEm'>"+c.em+"</span><span class='ctName'>"+c.name+"</span>"+
+          (c.tags?"<span class='ctTags'>"+c.tags.map(x=>"#"+x).join(" ")+"</span>":"")+"</div>"+
+          "<div class='ctTiers'>"+c.tiers.map((t,tidx)=>{
+            return "<button class='tier"+(selTier===tidx?" sel":"")+"' data-t='"+tidx+"'>Lv."+CT_LV[tidx]+" +"+t.score+"</button>";
+          }).join("")+"</div>"+
+          "<div class='ctDesc'>"+(selTier!==undefined?c.tiers[selTier].desc:c.tiers[0].desc)+"</div>";
+        card.querySelectorAll(".tier").forEach(btn=>{
+          btn.onclick=()=>{
+            const t=+btn.dataset.t;
+            if(ctSel[c.id]===t)delete ctSel[c.id];
+            else ctSel[c.id]=t;
             renderContract();
           };
-          zc.appendChild(d);
         });
+        zc.appendChild(card);
       });
       wrap.appendChild(zone);
     });
   }
   let total=0;
-  ctSel.forEach(key=>{
-    const [id,tidx]=key.split("#");
+  for(const id in ctSel){
     const c=CDATA.contracts.find(x=>x.id===id);
-    if(c&&c.tiers[tidx])total+=c.tiers[tidx].score;
-  });
-  $("ctSel").textContent="已选 "+ctSel.size+" / "+CDATA.maxContracts;
+    if(c&&c.tiers[ctSel[id]])total+=c.tiers[ctSel[id]].score;
+  }
+  $("ctSel").textContent="已选 "+Object.keys(ctSel).length+" 个词条";
   $("ctScore").textContent="合约总分 "+total;
   $("ctBank").textContent="当前碎片："+(+(localStorage.getItem("darg_frags")||0))+" 🧩　｜　消耗 "+CDATA.cost+" 🧩";
 }
 $("btnCtStart").onclick=()=>{
-  if(!ctSel.size){say("先选择至少 1 个词条",1800);return;}
+  if(!Object.keys(ctSel).length){say("先选择至少 1 个词条",1800);return;}
   const bank=+(localStorage.getItem("darg_frags")||0);
   if(bank<CDATA.cost){say("🧩 碎片不足：需 "+CDATA.cost,1800);return;}
   localStorage.setItem("darg_frags",String(bank-CDATA.cost));
   const sel=[];
-  ctSel.forEach(key=>{const [id,tidx]=key.split("#");sel.push({id:id,tier:+tidx});});
+  for(const id in ctSel)sel.push({id:id,tier:ctSel[id]});
   $("contract").style.display="none";
   newGame("lamp",sel);
 };

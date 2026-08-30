@@ -22,7 +22,6 @@
 window.CONTRACT_DATA = {
   cost: 50,                  // 每次进入消耗的碎片数量
   unlockKey: "darg_clear",   // 通关标记（localStorage key，通关普通模式时写入 "1"）
-  maxContracts: 3,           // 单局最多可选的词条数量
   contracts: [
     /* ── 强化烂点（三档难度）── */
     { "id":"c001","em":"💪","name":"烂点打鸡血","tags":["敌人"],
@@ -77,7 +76,7 @@ window.CONTRACT_DATA = {
         { "score":90,  "desc":"拾取范围 -60%", "mods":{"playerMagnetMult":-0.6} },
         { "score":140, "desc":"拾取范围 -80%", "mods":{"playerMagnetMult":-0.8} } ] },
     /* ── Boss ── */
-    { "id":"c011","em":"👑","name":"ARG酱狂暴","tags":["Boss"],
+    { "id":"c011","em":"👑","name":"ARG酱狂暴","tags":["特殊"],
       "tiers":[
         { "score":150, "desc":"Boss 生命 +50%、伤害 +50%", "mods":{"bossBuffs":{"hpMult":1.5,"dmgMult":1.5}} } ] },
     /* ── 特殊机制 ── */
