@@ -39,26 +39,30 @@ html,body{width:100%;height:100%;overflow:hidden;background:#08060e;font-family:
 #ctLine.ready{color:#b9a3ff}
 #contract .sub{color:#6b638a;font-size:12px;margin-bottom:10px}
 #contract .ctEmpty{color:#8a80a8;font-size:13px;padding:30px 0}
-#ctZones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:min(900px,94vw);align-items:start}
+#ctZones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:min(920px,96vw);align-items:start}
 .ctZone{background:#0e0a18;border:1px solid #2a2440;border-radius:10px;padding:10px;min-width:0}
 .ctZone .zh{color:#ffd76a;font-size:13px;font-weight:bold;margin-bottom:4px;text-align:center}
 .ctZone .zh small{color:#7a7296;font-weight:normal;font-size:10px}
-.ctZone .zc{display:grid;grid-template-columns:1fr;gap:6px}
-.ctCard{display:flex;gap:8px;align-items:flex-start;text-align:left;background:#120e1e;border:1px solid #3a2f60;border-radius:8px;padding:8px 10px;cursor:pointer;transition:.12s}
+.ctZone .zc{display:grid;grid-template-columns:1fr;gap:6px;max-height:calc(100vh - 250px);overflow-y:auto;padding-right:3px}
+.ctCard{position:relative;display:flex;gap:8px;align-items:flex-start;text-align:left;background:#120e1e;border:1px solid #3a2f60;border-radius:8px;padding:8px 10px;cursor:pointer;transition:.12s}
 .ctCard:hover{border-color:#b9a3ff}
 .ctCard.sel{border-color:#ffd76a;background:#1c2130;box-shadow:0 0 8px #ffd76a44}
+.ctCard .lv{color:#ffd76a;font-size:9px;font-weight:bold;margin-left:4px}
+.ctCard .sc{position:absolute;top:6px;right:8px;color:#39d98a;font-size:10px;font-weight:bold}
 .ctCard .ctEm{font-size:22px}
 .ctCard .ctName{color:#e8e2ff;font-size:12px;font-weight:bold}
-.ctCard .ctDesc{color:#8a80a8;font-size:11px;line-height:1.5;margin-top:2px}
+.ctCard .ctDesc{color:#8a80a8;font-size:11px;line-height:1.5;margin-top:2px;padding-right:20px}
 .ctCard .ctTags{color:#5f5875;font-size:9px;margin-top:2px}
 .ctFoot{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px;flex-wrap:wrap}
 #ctSel{color:#b9a3ff;font-size:12px}
 #ctBank{color:#b9a3ff;font-size:12px}
+#ctScore{color:#39d98a;font-size:13px;font-weight:bold}
 #contract .back{margin-top:14px;padding:9px 30px;background:#2a2440;color:#e8e2ff;
   border:1px solid #4a3870;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer}
 @media(max-width:760px){
   #ctZones{grid-template-columns:1fr}
   .ctZone .zc{grid-template-columns:1fr 1fr}
+  .ctZone .zc{max-height:30vh}
 }
 /* 角色选择 */
 #charsel h1{color:#ffe268;font-size:22px;margin-bottom:4px}
@@ -194,6 +198,7 @@ button.go{padding:13px 44px;background:#ff69b4;color:#fff;border:none;border-rad
   <div id="ctZones"></div>
   <div class="ctFoot">
     <span id="ctSel">已选 0 / 3</span>
+    <span id="ctScore">合约总分 0</span>
     <span id="ctBank"></span>
     <button class="go" id="btnCtStart">开始合约</button>
   </div>
@@ -249,7 +254,8 @@ const BEHAVIORS={
     e.x+=dx/l*spd*dt;e.y+=dy/l*spd*dt;
   },
   dash(e,p,dt,G){
-    if(e.cool===undefined)e.cool=p.every*Math.random();
+    const every=p.every*(e.everyMult||1);
+    if(e.cool===undefined)e.cool=every*Math.random();
     e.cool-=dt;
     if(e.dashLeft>0){
       e.dashLeft-=dt;
@@ -261,7 +267,7 @@ const BEHAVIORS={
       const pl=G.player;
       e.dashDir=Math.atan2(pl.y-e.y,pl.x-e.x);
       e.dashLeft=p.dashTime;
-      e.cool=p.every;
+      e.cool=every;
       return;
     }
     const pl=G.player,dx=pl.x-e.x,dy=pl.y-e.y,l=Math.hypot(dx,dy)||1;
@@ -284,7 +290,7 @@ const BEHAVIORS={
     e.fire-=dt;
     if(e.fire<=0&&l<p.range*1.3){
       e.fire=p.fireEvery;
-      G.ebullets.push({x:e.x,y:e.y,vx:dx/l*p.bulletSpd,vy:dy/l*p.bulletSpd,life:5,dmg:p.bulletDmg});
+      G.ebullets.push({x:e.x,y:e.y,vx:dx/l*p.bulletSpd,vy:dy/l*p.bulletSpd,life:5,dmg:(e.bdmg!==undefined?e.bdmg:p.bulletDmg)});
     }
   },
   healer(e,p,dt,G){
@@ -327,15 +333,17 @@ const BEHAVIORS={
 };
 const ON_DEATH={
   split(G,e,p){
-    for(let i=0;i<p.count;i++){
+    const n=Math.round(p.count*(G.ctMods&&G.ctMods.splitCountMult||1));
+    for(let i=0;i<n;i++){
       const a=Math.random()*TAU;
       spawnEnemy(G,p.into,e.x+Math.cos(a)*14,e.y+Math.sin(a)*14,p.hpMult);
     }
   },
   dropFake(G,e,p){
-    for(let i=0;i<p.count;i++){
+    const n=Math.round(p.count*(G.ctMods&&G.ctMods.fakeDropMult||1));
+    for(let i=0;i<n;i++){
       const a=Math.random()*TAU;
-      G.gems.push({x:e.x+Math.cos(a)*16,y:e.y+Math.sin(a)*16,fake:true});
+      G.gems.push({x:e.x+Math.cos(a)*16,y:e.y+Math.sin(a)*16,fake:true,life:(G.ctMods&&G.ctMods.gemLife)||0});
     }
   }
 };
@@ -472,7 +480,7 @@ function dexOrder(){
 
 /* ================= 游戏状态 ================= */
 let G=null;
-function newGame(charId){
+function newGame(charId,ctSelArr){
   const ch=TOOLS.characters.find(c=>c.id===charId)||TOOLS.characters[0];
   /* ★ 彻底重置所有界面状态 */
   $("bossBar").style.display="none";
@@ -497,8 +505,32 @@ function newGame(charId){
            magnetMult:0,xpMult:1,armor:0},   /* ★ magnetMult从0起，加法 */
     boss:null,bossDone:false,skipBtn:null,
     quoteT:6,invertT:0,flashT:0,flashCd:8,
-    pendingLv:0,escOpen:false
+    pendingLv:0,escOpen:false,ctMods:null,ctScore:0
   };
+  if(ctSelArr&&ctSelArr.length){
+    const mods={};
+    let score=0;
+    ctSelArr.forEach(s=>{
+      const c=CDATA.contracts.find(x=>x.id===s.id);
+      if(!c||!c.tiers[s.tier])return;
+      const t=c.tiers[s.tier];
+      score+=t.score;
+      for(const k in t.mods){
+        const v=t.mods[k];
+        if(k==="bossBuffs"){
+          mods.bossBuffs=mods.bossBuffs||{};
+          for(const bk in v)mods.bossBuffs[bk]=(mods.bossBuffs[bk]||1)*(v[bk]||1);
+        }else if(typeof v==="number"){
+          if(k==="playerHpMax"||k==="playerMagnetMult")mods[k]=(mods[k]||0)+v;
+          else mods[k]=(mods[k]||1)*v;
+        }
+      }
+    });
+    G.ctMods=mods;G.ctScore=score;
+    if(mods.playerHpMax){G.player.maxhp=Math.max(1,G.player.maxhp+mods.playerHpMax);G.player.hp=G.player.maxhp;}
+    if(mods.xpMult)G.pstat.xpMult*=mods.xpMult;
+    if(mods.playerMagnetMult)G.pstat.magnetMult+=mods.playerMagnetMult;
+  }
 }
 function goHome(){
   G=null;
@@ -537,9 +569,13 @@ function spawnEnemy(G,type,x,y,hpMult,elite){
     x=G.player.x+Math.cos(a)*rr;y=G.player.y+Math.sin(a)*rr;
   }
   const el=elite||false;
+  const M=G.ctMods||{};
   const scale=(hpMult||1)*(1+Math.floor(G.time/60)*(EDATA.hpScalePerMinute||0))*(el?5:1);
-  const e={type,x,y,hp:d.hp*scale,maxhp:d.hp*scale,
-    spd:d.spd*(el?0.85:1),r:d.r*(el?1.5:1),slow:0,hitCd:0,elite:el};
+  const e={type,x,y,hp:d.hp*scale*(M.enemyHpMult||1),maxhp:d.hp*scale*(M.enemyHpMult||1),
+    spd:d.spd*(el?0.85:1)*(M.enemySpdMult||1),r:d.r*(el?1.5:1),slow:0,hitCd:0,elite:el,
+    dmg:d.dmg*(M.enemyDmgMult||1)};
+  if(d.behavior==="dash")e.everyMult=M.enemyDashEveryMult||1;
+  if(d.behavior==="shooter"&&d.behaviorParams)e.bdmg=(d.behaviorParams.bulletDmg||1)*(M.enemyDmgMult||1);
   if(d.shield){e.shield=d.shield.layers;e.shieldHp=d.shield.hp;}
   if(d.ghost)e.ghost=true;
   if(el)G.dmgTexts.push({x,y:y-30,t:"⚠ 精英",life:1.2});
@@ -561,7 +597,7 @@ function weaponStats(w){
   }
   if(b.cooldown!==undefined)
     st.cooldown=b.cooldown*Math.pow(p.cooldownMult||1,lv-1)*G.pstat.cooldownMult;
-  st.damage=(st.damage||0)+G.pstat.flatDamage;
+  st.damage=((st.damage||0)+G.pstat.flatDamage)*(G.ctMods&&G.ctMods.playerDmgMult||1);
   if(st.count!==undefined)st.count+=G.pstat.count;
   return st;
 }
@@ -588,9 +624,10 @@ function killEnemy(e){
   recordDex(e.type);
   const d=enemyDef(e.type);
   const xpN=d.xp*(e.elite?5:1);
+  const gl=(G.ctMods&&G.ctMods.gemLife)||0;
   for(let i=0;i<xpN;i++){
     const a=Math.random()*TAU;
-    G.gems.push({x:e.x+Math.cos(a)*8,y:e.y+Math.sin(a)*8});
+    G.gems.push({x:e.x+Math.cos(a)*8,y:e.y+Math.sin(a)*8,life:gl});
   }
   G.fx.push({x:e.x,y:e.y,life:0.25,max:0.25,r:e.r});
   if(d.onDeath)ON_DEATH[d.onDeath.type](G,e,d.onDeath);
@@ -606,9 +643,10 @@ function hurtPlayer(dmg){
 /* ================= Boss ================= */
 function spawnBoss(){
   const b=EDATA.boss;
+  const bb=(G.ctMods&&G.ctMods.bossBuffs)||{};
   const a=Math.random()*TAU;
   G.boss={isBoss:true,x:G.player.x+Math.cos(a)*320,y:G.player.y+Math.sin(a)*320,
-    hp:b.hp,maxhp:b.hp,spd:b.spd,dmg:b.dmg,r:b.r,slow:0,hitCd:0,
+    hp:b.hp*(bb.hpMult||1),maxhp:b.hp*(bb.hpMult||1),spd:b.spd,dmg:b.dmg*(bb.dmgMult||1),r:b.r,slow:0,hitCd:0,
     t:0,phase:1,fireT:2.5,spawnT:5,gemT:0,vulnT:0,shieldOn:false,mercy:false};
   $("bossBar").style.display="block";
   say("👑 "+b.name+"出现了。");
@@ -646,7 +684,7 @@ function updateBoss(dt){
     b.gemT-=dt;
     if(b.gemT<=0){b.gemT=2;
       const a=Math.random()*TAU;
-      G.gems.push({x:b.x+Math.cos(a)*R(40,120),y:b.y+Math.sin(a)*R(40,120),fake:true});}
+      G.gems.push({x:b.x+Math.cos(a)*R(40,120),y:b.y+Math.sin(a)*R(40,120),fake:true,life:(G.ctMods&&G.ctMods.gemLife)||0});}
   }else b.shieldOn=false;
   if(b.vulnT>0)b.vulnT-=dt;
 
@@ -781,7 +819,8 @@ function die(){
   const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
   $("deadSt").innerHTML=
     "存活时间：<b>"+m+"分"+s+"秒</b><br>击杀烂点：<b>"+G.kills+"</b><br>等级：<b>"+G.player.lv+"</b><br>"+
-    "WIG碎片：<b>+"+frags+"</b>（累计 "+bank+" 🧩）";
+    "WIG碎片：<b>+"+frags+"</b>（累计 "+bank+" 🧩）"+
+    (G.ctScore?"<br>本次合约总分：<b>+"+G.ctScore+"</b>":"");
   $("dead").style.display="flex";
 }
 function gameEnd(good){
@@ -811,7 +850,8 @@ function gameEnd(good){
       "<p>「再见了。这次的ARG，不会有下次了。」</p>"+
       "<p style='color:#544c70;font-size:12px'>——她只是想要一个不用打了的结局。下次试试放下武器？</p>";
   }
-  $("endRw").textContent="用时 "+m+"分"+s+"秒 ｜ 击杀 "+G.kills+" ｜ WIG碎片 +"+frags+"（累计 "+bank+" 🧩）";
+  $("endRw").textContent="用时 "+m+"分"+s+"秒 ｜ 击杀 "+G.kills+" ｜ WIG碎片 +"+frags+"（累计 "+bank+" 🧩）"+
+    (G.ctScore?"　｜　本次合约总分 +"+G.ctScore:"");
   $("ending").style.display="flex";
 }
 
@@ -850,7 +890,7 @@ function update(dt){
   const ml=Math.hypot(mx,my);
   const slowMul=p.slowT>0?0.55:1;
   if(ml>0){
-    const spd=p.spd*(1+G.pstat.moveMult)*slowMul;
+    const spd=p.spd*(1+G.pstat.moveMult)*(G.ctMods&&G.ctMods.playerSpdMult||1)*slowMul;
     p.x+=mx/ml*spd*dt;p.y+=my/ml*spd*dt;
   }
 
@@ -904,7 +944,7 @@ function update(dt){
       if(dx*dx+dy*dy<rr*rr&&d.aura.slow)p.slowT=Math.max(p.slowT,0.15);
     }
     const dx=p.x-e.x,dy=p.y-e.y;
-    if(dx*dx+dy*dy<(e.r+p.r)*(e.r+p.r))hurtPlayer(d.dmg);
+    if(dx*dx+dy*dy<(e.r+p.r)*(e.r+p.r))hurtPlayer(e.dmg!==undefined?e.dmg:d.dmg);
   }
   G.enemies=G.enemies.filter(e=>!e.dead);
 
@@ -927,6 +967,7 @@ function update(dt){
   /* ★ 磁吸范围：基础60 × (1+加成) */
   const magnet=60*(1+G.pstat.magnetMult);
   for(const g of G.gems){
+    if(g.life>0){g.life-=dt;if(g.life<=0){g.dead=true;continue;}}
     const dx=p.x-g.x,dy=p.y-g.y,l=Math.hypot(dx,dy);
     if(l<magnet){const pull=Math.max(240,400-l);g.x+=dx/l*pull*dt;g.y+=dy/l*pull*dt;}
     if(l<p.r+6){
@@ -949,10 +990,10 @@ function update(dt){
       G.spawnT=2.5;
     }else{
       const w=curWave();
-      const elite=G.time>150&&Math.random()<0.08;
+      const elite=G.time>150&&Math.random()<0.08*(G.ctMods&&G.ctMods.eliteChanceMult||1);
       for(let i=0;i<w.batch;i++)
         spawnEnemy(G,w.types[R(0,w.types.length-1)],undefined,undefined,1,elite&&i===0);
-      G.spawnT=w.every;
+      G.spawnT=w.every*(G.ctMods&&G.ctMods.spawnEveryMult||1);
     }
   }
 
@@ -1203,6 +1244,7 @@ $("btnContract").onclick=()=>{
   $("contract").style.display="flex";
 };
 let ctSel=new Set();
+const CT_LV=["Ⅰ","Ⅱ","Ⅲ"];
 function renderContract(){
   const list=CDATA.contracts||[];
   const wrap=$("ctZones");wrap.innerHTML="";
@@ -1212,7 +1254,8 @@ function renderContract(){
     const zones=[
       {key:"敌人",title:"⚔️ 强化烂点"},
       {key:"玩家",title:"🩹 弱化玩家"},
-      {key:"Boss",title:"👑 Boss"}
+      {key:"Boss",title:"👑 Boss"},
+      {key:"特殊",title:"⚙️ 特殊机制"}
     ];
     zones.forEach(z=>{
       const items=list.filter(c=>(c.tags||[]).includes(z.key));
@@ -1220,29 +1263,48 @@ function renderContract(){
       zone.innerHTML="<div class='zh'>"+z.title+" <small>"+items.length+"</small></div><div class='zc'></div>";
       const zc=zone.querySelector(".zc");
       items.forEach(c=>{
-        const d=document.createElement("div");
-        d.className="ctCard"+(ctSel.has(c.id)?" sel":"");
-        d.innerHTML="<div class='ctEm'>"+c.em+"</div><div><div class='ctName'>"+c.name+"</div>"+
-          "<div class='ctDesc'>"+c.desc+"</div>"+(c.tags?"<div class='ctTags'>"+c.tags.map(t=>"#"+t).join(" ")+"</div>":"")+"</div>";
-        d.onclick=()=>{
-          if(ctSel.has(c.id))ctSel.delete(c.id);
-          else{
-            if(ctSel.size>=CDATA.maxContracts){say("最多选择 "+CDATA.maxContracts+" 个词条",1800);return;}
-            ctSel.add(c.id);
-          }
-          renderContract();
-        };
-        zc.appendChild(d);
+        c.tiers.forEach((t,tidx)=>{
+          const key=c.id+"#"+tidx;
+          const d=document.createElement("div");
+          d.className="ctCard"+(ctSel.has(key)?" sel":"");
+          const multi=c.tiers.length>1;
+          d.innerHTML="<div class='ctEm'>"+c.em+"</div><div><div class='ctName'>"+c.name+
+            (multi?"<span class='lv'>Lv."+CT_LV[tidx]+"</span>":"")+"</div>"+
+            "<div class='ctDesc'>"+t.desc+"</div><div class='sc'>+"+t.score+"</div>"+
+            (c.tags?"<div class='ctTags'>"+c.tags.map(x=>"#"+x).join(" ")+"</div>":"")+"</div>";
+          d.onclick=()=>{
+            if(ctSel.has(key))ctSel.delete(key);
+            else{
+              if(ctSel.size>=CDATA.maxContracts){say("最多选择 "+CDATA.maxContracts+" 个词条",1800);return;}
+              ctSel.add(key);
+            }
+            renderContract();
+          };
+          zc.appendChild(d);
+        });
       });
       wrap.appendChild(zone);
     });
   }
+  let total=0;
+  ctSel.forEach(key=>{
+    const [id,tidx]=key.split("#");
+    const c=CDATA.contracts.find(x=>x.id===id);
+    if(c&&c.tiers[tidx])total+=c.tiers[tidx].score;
+  });
   $("ctSel").textContent="已选 "+ctSel.size+" / "+CDATA.maxContracts;
+  $("ctScore").textContent="合约总分 "+total;
   $("ctBank").textContent="当前碎片："+(+(localStorage.getItem("darg_frags")||0))+" 🧩　｜　消耗 "+CDATA.cost+" 🧩";
 }
 $("btnCtStart").onclick=()=>{
   if(!ctSel.size){say("先选择至少 1 个词条",1800);return;}
-  say("合约流程准备中，敬请期待（已选 "+ctSel.size+" 个词条）",2500);
+  const bank=+(localStorage.getItem("darg_frags")||0);
+  if(bank<CDATA.cost){say("🧩 碎片不足：需 "+CDATA.cost,1800);return;}
+  localStorage.setItem("darg_frags",String(bank-CDATA.cost));
+  const sel=[];
+  ctSel.forEach(key=>{const [id,tidx]=key.split("#");sel.push({id:id,tier:+tidx});});
+  $("contract").style.display="none";
+  newGame("lamp",sel);
 };
 $("btnCtBack").onclick=()=>{$("contract").style.display="none";refreshHome();$("home").style.display="flex";};
 $("btnDexBack").onclick=()=>{
