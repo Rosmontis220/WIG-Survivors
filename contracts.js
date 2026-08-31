@@ -50,12 +50,12 @@ window.CONTRACT_DATA = {
         { "score":60, "desc":"精英烂点概率 +20%", "mods":{"eliteChanceMult":1.2} },
         { "score":90, "desc":"精英烂点概率 +30%", "mods":{"eliteChanceMult":1.3} } ] },
     /* ── 弱化玩家（三档难度 +10%/+30%/+50%）── */
-    { "id":"c006","em":"🍩","name":"WIG猎人断粮","tags":["玩家"],
+    { "id":"c006","em":"🍩","name":"ARG猎人断粮","tags":["玩家"],
       "tiers":[
         { "score":20, "desc":"生命上限 -10", "mods":{"playerHpMax":-10} },
         { "score":45, "desc":"生命上限 -20", "mods":{"playerHpMax":-20} },
         { "score":75, "desc":"生命上限 -30", "mods":{"playerHpMax":-30} } ] },
-    { "id":"c007","em":"🦵","name":"WIG猎人腿软","tags":["玩家"],
+    { "id":"c007","em":"🦵","name":"ARG猎人腿软","tags":["玩家"],
       "tiers":[
         { "score":20, "desc":"移动速度 -10%", "mods":{"playerSpdMult":0.9} },
         { "score":45, "desc":"移动速度 -20%", "mods":{"playerSpdMult":0.8} },
