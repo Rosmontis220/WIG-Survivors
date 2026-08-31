@@ -1070,10 +1070,11 @@ function update(dt){
 
 /* ================= 渲染 ================= */
 function render(){
-  ctx.fillStyle="#08060e";ctx.fillRect(0,0,W,H);
+  const light=document.body.classList.contains("light");
+  ctx.fillStyle=light?"#ffffff":"#08060e";ctx.fillRect(0,0,W,H);
   if(!G)return;
   const gs=64,ox=-(G.player.x%gs),oy=-(G.player.y%gs);
-  ctx.strokeStyle="#141020";ctx.lineWidth=1;ctx.beginPath();
+  ctx.strokeStyle=light?"#e4e6ea":"#141020";ctx.lineWidth=1;ctx.beginPath();
   for(let x=ox;x<W;x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,H);}
   for(let y=oy;y<H;y+=gs){ctx.moveTo(0,y);ctx.lineTo(W,y);}
   ctx.stroke();
@@ -1113,7 +1114,7 @@ function render(){
       ctx.beginPath();ctx.arc(e.x,e.y,e.r+6,0,TAU);ctx.stroke();
     }
     if(e.hp<e.maxhp||e.shield>0){
-      ctx.fillStyle="#000a";ctx.fillRect(e.x-14,e.y-e.r-9,28,4);
+      ctx.fillStyle=light?"rgba(0,0,0,.12)":"#000a";ctx.fillRect(e.x-14,e.y-e.r-9,28,4);
       ctx.fillStyle=e.shield>0?"#7fd4ff":(e.elite?"#ffe268":"#ff4f7b");
       const hpr=e.shield>0?e.shieldHp/d.shield.hp:e.hp/e.maxhp;
       ctx.fillRect(e.x-14,e.y-e.r-9,28*hpr,4);
@@ -1153,14 +1154,14 @@ function render(){
   }
   ctx.textAlign="center";ctx.font="12px monospace";
   for(const d of G.dmgTexts){
-    ctx.fillStyle="rgba(255,226,104,"+clamp(d.life*2,0,1)+")";
+    ctx.fillStyle=light?"rgba(150,105,0,"+clamp(d.life*2,0,1)+")":"rgba(255,226,104,"+clamp(d.life*2,0,1)+")";
     ctx.fillText(d.t,d.x,d.y);
   }
 
   if(G.flashT>0){ctx.fillStyle="rgba(200,0,40,"+G.flashT*1.2+")";ctx.fillRect(0,0,W,H);}
   else if(G.invertT>0){
     ctx.fillStyle="rgba(120,0,30,.10)";ctx.fillRect(0,0,W,H);
-    ctx.fillStyle="#ff8fa8";ctx.font="13px monospace";
+    ctx.fillStyle=light?"#b23a5e":"#ff8fa8";ctx.font="13px monospace";
     ctx.fillText("👻 操作已反转",W/2,H-70);
   }
 }
